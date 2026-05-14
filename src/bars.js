@@ -7,6 +7,14 @@ const COLORS = {
   sorted:  new THREE.Color(0x4ad295),
 };
 
+// How much emissive glow each state gets (kept subtle on idle, bright on active).
+const EMISSIVE = {
+  default: 0.05,
+  compare: 0.55,
+  swap:    0.55,
+  sorted:  0.18,
+};
+
 const TOTAL_WIDTH = 80;
 const MAX_HEIGHT = 22;
 
@@ -45,7 +53,7 @@ export function createBars(scene, { onBoundsChange } = {}) {
         color: COLORS.default,
         roughness: 0.55,
         metalness: 0.15,
-        emissive: COLORS.default.clone().multiplyScalar(0.08),
+        emissive: COLORS.default.clone().multiplyScalar(EMISSIVE.default),
       });
       const mesh = new THREE.Mesh(geo, mat);
       mesh.scale.y = h;
@@ -73,18 +81,20 @@ export function createBars(scene, { onBoundsChange } = {}) {
     meshes[i].position.y = h / 2;
   }
 
-  function setColor(i, color) {
+  function setColor(i, color, emissiveScale) {
     meshes[i].material.color.copy(color);
-    meshes[i].material.emissive.copy(color).multiplyScalar(0.12);
+    meshes[i].material.emissive.copy(color).multiplyScalar(emissiveScale);
   }
 
   function resetColor(i) {
-    setColor(i, sortedMask[i] ? COLORS.sorted : COLORS.default);
+    if (sortedMask[i]) setColor(i, COLORS.sorted, EMISSIVE.sorted);
+    else setColor(i, COLORS.default, EMISSIVE.default);
   }
 
   function highlight(indices, kind) {
     const c = COLORS[kind] || COLORS.default;
-    for (const i of indices) setColor(i, c);
+    const e = EMISSIVE[kind] ?? EMISSIVE.default;
+    for (const i of indices) setColor(i, c, e);
   }
 
   function clearHighlight(indices) {
@@ -104,7 +114,7 @@ export function createBars(scene, { onBoundsChange } = {}) {
 
   function markSorted(i) {
     sortedMask[i] = true;
-    setColor(i, COLORS.sorted);
+    setColor(i, COLORS.sorted, EMISSIVE.sorted);
   }
 
   function markAllSorted() {

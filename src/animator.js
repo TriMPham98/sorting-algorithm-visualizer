@@ -2,13 +2,19 @@ export function createAnimator({ bars, audio, onStateChange }) {
   let gen = null;
   let playing = false;
   let stepsPerFrame = 4;
-  let lastHighlighted = [];
+  // Accumulates every index highlighted in this tick. Each new tick clears
+  // them all (so a fast tick that touched many bars doesn't leave a trail).
+  let touched = new Set();
 
   function clearLast() {
-    if (lastHighlighted.length) {
-      bars.clearHighlight(lastHighlighted);
-      lastHighlighted = [];
+    if (touched.size) {
+      bars.clearHighlight([...touched]);
+      touched.clear();
     }
+  }
+
+  function markTouched(...indices) {
+    for (const i of indices) touched.add(i);
   }
 
   function load(generator) {
@@ -69,7 +75,7 @@ export function createAnimator({ bars, audio, onStateChange }) {
     switch (step.type) {
       case 'compare': {
         bars.highlight([step.i, step.j], 'compare');
-        lastHighlighted = [step.i, step.j];
+        markTouched(step.i, step.j);
         const vals = bars.getValues();
         const max = Math.max(...vals, 1);
         audio.playTone(vals[step.i], max);
@@ -78,7 +84,7 @@ export function createAnimator({ bars, audio, onStateChange }) {
       case 'swap': {
         bars.swap(step.i, step.j);
         bars.highlight([step.i, step.j], 'swap');
-        lastHighlighted = [step.i, step.j];
+        markTouched(step.i, step.j);
         const vals = bars.getValues();
         const max = Math.max(...vals, 1);
         audio.playTone(vals[step.i], max);
@@ -87,12 +93,13 @@ export function createAnimator({ bars, audio, onStateChange }) {
       case 'overwrite': {
         bars.overwrite(step.i, step.value);
         bars.highlight([step.i], 'swap');
-        lastHighlighted = [step.i];
+        markTouched(step.i);
         audio.playTone(step.value, Math.max(...bars.getValues(), 1));
         break;
       }
       case 'mark-sorted': {
         bars.markSorted(step.i);
+        touched.delete(step.i);
         break;
       }
     }

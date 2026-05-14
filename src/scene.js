@@ -47,29 +47,6 @@ export function createScene(canvas) {
 
     camera.position.set(0, Cy, Cz);
     camera.lookAt(0, Ly, 0);
-
-    // Diagnostic overlay
-    if (typeof document !== 'undefined') {
-      let dbg = document.getElementById('camera-debug');
-      if (!dbg) {
-        dbg = document.createElement('div');
-        dbg.id = 'camera-debug';
-        dbg.style.cssText = 'position:fixed;top:8px;right:8px;padding:8px 10px;background:rgba(0,0,0,0.7);color:#9fd;font:11px/1.4 ui-monospace,monospace;border-radius:6px;z-index:1000;pointer-events:none;white-space:pre';
-        document.body.appendChild(dbg);
-      }
-      const renderer = canvas.getContext('webgl2') || canvas.getContext('webgl');
-      const cb = renderer ? `${canvas.width}x${canvas.height}` : '?';
-      const cssSize = `${canvas.clientWidth}x${canvas.clientHeight}`;
-      const win = `${window.innerWidth}x${window.innerHeight}`;
-      const dpr = window.devicePixelRatio;
-      dbg.textContent = [
-        `window: ${win}  dpr: ${dpr}`,
-        `canvas css: ${cssSize}  buffer: ${cb}`,
-        `aspect: ${aspect.toFixed(3)}`,
-        `bounds W×H: ${W}×${H}`,
-        `Cy: ${Cy.toFixed(2)}  Cz: ${Cz.toFixed(2)}  Ly: ${Ly.toFixed(2)}`,
-      ].join('\n');
-    }
   }
   fitView();
 
