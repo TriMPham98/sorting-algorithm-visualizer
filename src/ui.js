@@ -10,6 +10,8 @@ export function setupUI({ bars, animator, audio, onShuffle, onAlgorithmChange, o
   const playBtn = document.getElementById('play');
   const resetBtn = document.getElementById('reset');
   const muteIn = document.getElementById('mute');
+  const compCount = document.getElementById('compCount');
+  const writeCount = document.getElementById('writeCount');
 
   for (const a of algorithms) {
     const opt = document.createElement('option');
@@ -69,9 +71,15 @@ export function setupUI({ bars, animator, audio, onShuffle, onAlgorithmChange, o
     playBtn.textContent = text;
   }
 
+  function updateCounters({ comparisons, writes }) {
+    compCount.textContent = comparisons.toLocaleString();
+    writeCount.textContent = writes.toLocaleString();
+  }
+
   return {
     getSelectedAlgorithm: () => getAlgorithm(algoSel.value),
     getSize: () => parseInt(sizeIn.value, 10),
     setPlayLabel,
+    updateCounters,
   };
 }

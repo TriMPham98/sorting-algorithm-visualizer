@@ -24,6 +24,9 @@ const animator = createAnimator({
     else if (state === 'finished') ui.setPlayLabel('Play');
     else if (state === 'stopped') ui.setPlayLabel('Play');
   },
+  onCountersChange(c) {
+    ui?.updateCounters(c);
+  },
 });
 
 onTick(() => animator.tick());
@@ -67,4 +70,5 @@ ui = setupUI({
 });
 
 // initial state
+ui.updateCounters({ comparisons: 0, writes: 0 });
 shuffle();
