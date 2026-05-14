@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Sorting Algorithm Visualizer</title>
+    <style>
+      :root {
+        color-scheme: dark;
+        --panel-bg: rgba(15, 18, 28, 0.82);
+        --panel-border: rgba(120, 160, 220, 0.25);
+        --text: #e6ecf5;
+        --muted: #8a95a8;
+        --accent: #6fb3ff;
+      }
+      html, body {
+        margin: 0;
+        padding: 0;
+        height: 100%;
+        overflow: hidden;
+        background: #07090f;
+        color: var(--text);
+        font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+      }
+      #canvas {
+        position: fixed;
+        inset: 0;
+        display: block;
+      }
+      #panel {
+        position: fixed;
+        top: 16px;
+        left: 16px;
+        min-width: 260px;
+        padding: 14px 16px;
+        background: var(--panel-bg);
+        border: 1px solid var(--panel-border);
+        border-radius: 10px;
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
+        font-size: 13px;
+        user-select: none;
+      }
+      #panel h1 {
+        margin: 0 0 10px;
+        font-size: 14px;
+        font-weight: 600;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        color: var(--accent);
+      }
+      .row {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin: 8px 0;
+      }
+      .row label {
+        flex: 0 0 70px;
+        color: var(--muted);
+      }
+      .row input[type="range"] {
+        flex: 1;
+        accent-color: var(--accent);
+      }
+      .row .value {
+        flex: 0 0 36px;
+        text-align: right;
+        font-variant-numeric: tabular-nums;
+      }
+      select, button {
+        background: rgba(255,255,255,0.06);
+        color: var(--text);
+        border: 1px solid var(--panel-border);
+        border-radius: 6px;
+        padding: 6px 10px;
+        font: inherit;
+        cursor: pointer;
+      }
+      select { flex: 1; }
+      button:hover { background: rgba(255,255,255,0.12); }
+      button:active { background: rgba(255,255,255,0.18); }
+      .buttons { display: flex; gap: 6px; margin-top: 10px; }
+      .buttons button { flex: 1; }
+      .mute {
+        display: flex; align-items: center; gap: 8px;
+        margin-top: 10px; color: var(--muted);
+      }
+      .mute input { accent-color: var(--accent); }
+      #hint {
+        position: fixed;
+        bottom: 12px;
+        left: 50%;
+        transform: translateX(-50%);
+        color: var(--muted);
+        font-size: 12px;
+        pointer-events: none;
+      }
+    </style>
+  </head>
+  <body>
+    <canvas id="canvas"></canvas>
+    <div id="panel">
+      <h1>Sorting Visualizer</h1>
+      <div class="row">
+        <label for="algo">Algorithm</label>
+        <select id="algo"></select>
+      </div>
+      <div class="row">
+        <label for="size">Size</label>
+        <input id="size" type="range" min="16" max="200" value="64" />
+        <span class="value" id="sizeVal">64</span>
+      </div>
+      <div class="row">
+        <label for="speed">Speed</label>
+        <input id="speed" type="range" min="1" max="50" value="4" />
+        <span class="value" id="speedVal">4</span>
+      </div>
+      <div class="buttons">
+        <button id="shuffle">Shuffle</button>
+        <button id="play">Play</button>
+        <button id="reset">Reset</button>
+      </div>
+      <label class="mute">
+        <input type="checkbox" id="mute" />
+        Mute
+      </label>
+    </div>
+    <div id="hint">click play to start — sound begins on first interaction</div>
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>
