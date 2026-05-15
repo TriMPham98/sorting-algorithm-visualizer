@@ -13,50 +13,115 @@ const bars = createBars(scene, {
 const audio = createAudio();
 
 let ui; // forward ref
+let currentAlgo = null;
+let runStartMs = 0;
 
 const animator = createAnimator({
   bars,
   audio,
   onStateChange(state) {
     if (!ui) return;
-    if (state === 'playing') ui.setPlayLabel('Pause');
+    if (state === 'playing') {
+      ui.setPlayLabel('Pause');
+      if (runStartMs === 0) runStartMs = performance.now();
+    }
     else if (state === 'paused') ui.setPlayLabel('Play');
-    else if (state === 'finished') ui.setPlayLabel('Play');
     else if (state === 'stopped') ui.setPlayLabel('Play');
+    else if (state === 'finished') {
+      ui.setPlayLabel('Play');
+      const elapsed = runStartMs > 0 ? performance.now() - runStartMs : 0;
+      const c = animator.getCounters();
+      if (currentAlgo) {
+        ui.showSummary({
+          algoName: currentAlgo.name,
+          n: bars.length,
+          comparisons: c.comparisons,
+          writes: c.writes,
+          elapsedMs: elapsed,
+          worstCompares: currentAlgo.info.worstCompares(bars.length),
+          worstLabel: currentAlgo.info.worstLabel,
+        });
+      }
+    }
   },
   onCountersChange(c) {
     ui?.updateCounters(c);
+  },
+  onCursorChange(line, kind) {
+    ui?.setCursorLine(line, kind);
   },
 });
 
 onTick(() => animator.tick());
 
-function makeShuffledArray(n) {
-  const arr = new Array(n);
-  for (let i = 0; i < n; i++) arr[i] = i + 1;
-  for (let i = n - 1; i > 0; i--) {
+function range1ToN(n) {
+  const a = new Array(n);
+  for (let i = 0; i < n; i++) a[i] = i + 1;
+  return a;
+}
+
+function shuffleInPlace(a) {
+  for (let i = a.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
-    const t = arr[i]; arr[i] = arr[j]; arr[j] = t;
+    const t = a[i]; a[i] = a[j]; a[j] = t;
   }
-  return arr;
+  return a;
+}
+
+function nearlySorted(n, swapRatio = 0.05) {
+  const a = range1ToN(n);
+  const swaps = Math.max(1, Math.round(n * swapRatio));
+  for (let s = 0; s < swaps; s++) {
+    const i = Math.floor(Math.random() * (n - 1));
+    const t = a[i]; a[i] = a[i + 1]; a[i + 1] = t;
+  }
+  return a;
+}
+
+function fewUnique(n, buckets = 5) {
+  const a = new Array(n);
+  const max = n;
+  for (let i = 0; i < n; i++) {
+    const b = Math.floor(Math.random() * buckets);
+    a[i] = Math.round(((b + 1) / buckets) * max);
+  }
+  return a;
+}
+
+function makeArray(n, preset) {
+  switch (preset) {
+    case 'sorted':     return range1ToN(n);
+    case 'reversed':   return range1ToN(n).reverse();
+    case 'nearly':     return nearlySorted(n, 0.05);
+    case 'few-unique': return fewUnique(n, 5);
+    default:           return shuffleInPlace(range1ToN(n));
+  }
 }
 
 function shuffle() {
   animator.stop();
+  ui?.hideSummary();
+  runStartMs = 0;
   const n = ui ? ui.getSize() : 64;
-  bars.setValues(makeShuffledArray(n));
+  const preset = ui ? ui.getPreset() : 'random';
+  bars.setValues(makeArray(n, preset));
 }
 
 function loadAlgorithm(id, { keepArray = false } = {}) {
+  const algo = getAlgorithm(id);
+  currentAlgo = algo;
+  ui?.setPseudocode(algo.pseudocode);
+  ui?.setAlgorithmInfo(algo.info);
   if (!keepArray) {
     animator.stop();
     return;
   }
   // load generator over current bar values
-  const algo = getAlgorithm(id);
   const working = bars.getValues();
   // reset sorted markers — fresh run
   bars.setValues(working);
+  ui?.hideSummary();
+  runStartMs = 0;
   animator.load(algo.fn(working));
 }
 
@@ -70,5 +135,9 @@ ui = setupUI({
 });
 
 // initial state
+const initialAlgo = getAlgorithm('insertion');
+currentAlgo = initialAlgo;
 ui.updateCounters({ comparisons: 0, writes: 0 });
+ui.setPseudocode(initialAlgo.pseudocode);
+ui.setAlgorithmInfo(initialAlgo.info);
 shuffle();

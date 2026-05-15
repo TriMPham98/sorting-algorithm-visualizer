@@ -1,15 +1,30 @@
-export function createAnimator({ bars, audio, onStateChange, onCountersChange }) {
+export function createAnimator({ bars, audio, onStateChange, onCountersChange, onCursorChange }) {
   let gen = null;
   let playing = false;
-  let stepsPerFrame = 4;
+  let stepRate = 1;       // steps per frame; can be fractional
+  let accumulator = 0;
+  const MAX_PER_TICK = 200;
   // Accumulates every index highlighted in this tick. Each new tick clears
   // them all (so a fast tick that touched many bars doesn't leave a trail).
   let touched = new Set();
   let counters = { comparisons: 0, writes: 0 };
+  let lastCursorLine = -1;
+  let lastCursorKind = 'default';
+
+  // Map a step type to the same color "kind" used by bars.highlight.
+  function kindFor(type) {
+    if (type === 'compare') return 'compare';
+    if (type === 'swap' || type === 'overwrite') return 'swap';
+    if (type === 'mark-sorted') return 'sorted';
+    return 'default';
+  }
 
   function resetCounters() {
     counters = { comparisons: 0, writes: 0 };
     onCountersChange?.(counters);
+    lastCursorLine = -1;
+    lastCursorKind = 'default';
+    onCursorChange?.(-1, 'default');
   }
 
   function clearLast() {
@@ -26,6 +41,7 @@ export function createAnimator({ bars, audio, onStateChange, onCountersChange })
   function load(generator) {
     stop();
     gen = generator;
+    accumulator = 0;
     resetCounters();
   }
 
@@ -57,26 +73,67 @@ export function createAnimator({ bars, audio, onStateChange, onCountersChange })
     if (playing) pause(); else play();
   }
 
+  // Slider 1..50 → fractional stepRate:
+  //  slider 1..10  → 0.1 .. 1.0 (6 → 60 steps/sec)
+  //  slider 11..50 → 2 .. 41 steps/frame
   function setSpeed(s) {
-    stepsPerFrame = Math.max(1, Math.floor(s));
+    const v = Math.max(1, Math.min(50, Math.floor(s)));
+    stepRate = v <= 10 ? v / 10 : v - 9;
+  }
+
+  function pumpOneStep() {
+    const next = gen.next();
+    if (next.done) return false;
+    applyStep(next.value);
+    if (typeof next.value.line === 'number') {
+      lastCursorLine = next.value.line;
+      lastCursorKind = kindFor(next.value.type);
+    }
+    return true;
+  }
+
+  function flushIfChanged(beforeOps, beforeLine, beforeKind) {
+    if (counters.comparisons + counters.writes !== beforeOps) {
+      onCountersChange?.(counters);
+    }
+    if (lastCursorLine !== beforeLine || lastCursorKind !== beforeKind) {
+      onCursorChange?.(lastCursorLine, lastCursorKind);
+    }
   }
 
   function tick() {
     if (!playing || !gen) return;
     clearLast();
-    const before = counters.comparisons + counters.writes;
+    accumulator += stepRate;
+    const beforeOps = counters.comparisons + counters.writes;
+    const beforeLine = lastCursorLine;
+    const beforeKind = lastCursorKind;
+    let steps = 0;
     let done = false;
-    for (let s = 0; s < stepsPerFrame; s++) {
-      const next = gen.next();
-      if (next.done) { done = true; break; }
-      applyStep(next.value);
+    while (accumulator >= 1 && steps < MAX_PER_TICK) {
+      accumulator -= 1;
+      if (!pumpOneStep()) { done = true; break; }
+      steps++;
     }
-    if (counters.comparisons + counters.writes !== before) {
-      onCountersChange?.(counters);
-    }
+    flushIfChanged(beforeOps, beforeLine, beforeKind);
     if (done) {
       bars.markAllSorted();
       playing = false;
+      gen = null;
+      onStateChange?.('finished');
+    }
+  }
+
+  function stepOnce() {
+    if (!gen) return;
+    clearLast();
+    const beforeOps = counters.comparisons + counters.writes;
+    const beforeLine = lastCursorLine;
+    const beforeKind = lastCursorKind;
+    const advanced = pumpOneStep();
+    flushIfChanged(beforeOps, beforeLine, beforeKind);
+    if (!advanced) {
+      bars.markAllSorted();
       gen = null;
       onStateChange?.('finished');
     }
@@ -117,11 +174,23 @@ export function createAnimator({ bars, audio, onStateChange, onCountersChange })
         touched.delete(step.i);
         break;
       }
+      case 'range': {
+        bars.setRange(step.lo ?? null, step.hi ?? null);
+        break;
+      }
+      case 'pivot': {
+        bars.setPivot(step.i ?? null);
+        break;
+      }
+      case 'heap-end': {
+        bars.setHeapEnd(step.end ?? null);
+        break;
+      }
     }
   }
 
   return {
-    load, play, pause, toggle, stop, setSpeed, tick,
+    load, play, pause, toggle, stop, setSpeed, tick, stepOnce,
     getCounters() { return { ...counters }; },
     get isPlaying() { return playing; },
     get isLoaded() { return gen !== null; },
