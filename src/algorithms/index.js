@@ -11,9 +11,20 @@ import { radixSort,     pseudocode as radixPC     } from './radix.js';
 import { timSort,       pseudocode as timPC       } from './tim.js';
 import { introSort,     pseudocode as introPC     } from './intro.js';
 import { bogoSort,      pseudocode as bogoPC      } from './bogo.js';
+import { pancakeSort,   pseudocode as pancakePC   } from './pancake.js';
+import { combSort,      pseudocode as combPC      } from './comb.js';
+import { cycleSort,     pseudocode as cyclePC     } from './cycle.js';
+import { gnomeSort,     pseudocode as gnomePC     } from './gnome.js';
+import { bitonicSort,   pseudocode as bitonicPC   } from './bitonic.js';
+import { pdqSort,       pseudocode as pdqPC       } from './pdq.js';
+import { blockSort,     pseudocode as blockPC     } from './block.js';
+import { stoogeSort,    pseudocode as stoogePC    } from './stooge.js';
+import { slowSort,      pseudocode as slowPC      } from './slow.js';
+import { beadSort,      pseudocode as beadPC      } from './bead.js';
 
 const nSquaredOverTwo = (n) => Math.round(n * (n - 1) / 2);
 const nLogN = (n) => Math.round(n * Math.log2(Math.max(2, n)));
+const nLogSquared = (n) => Math.round(n * Math.log2(Math.max(2, n)) ** 2);
 
 // Ordered by complexity-class group. The `category` field drives the
 // <optgroup> labels in the dropdown.
@@ -59,6 +70,36 @@ export const algorithms = [
     },
     description: 'Bubble sort that alternates direction each pass — forward, then backward. Handles "turtles" (small values near the end) faster than plain bubble sort because they bubble back left in one pass instead of crawling one position per outer iteration. Still O(n²); a curiosity rather than a serious tool.',
   },
+  {
+    id: 'gnome', name: 'Gnome Sort', category: 'Quadratic O(n²)',
+    fn: gnomeSort, pseudocode: gnomePC,
+    info: {
+      best: 'O(n)', average: 'O(n²)', worst: 'O(n²)', space: 'O(1)',
+      stable: true, inPlace: true,
+      worstCompares: nSquaredOverTwo, worstLabel: 'n(n−1)/2',
+    },
+    description: 'Insertion sort with swaps instead of shifts. The gnome walks: if the current pair is in order, step forward; otherwise swap and step back. Notable for being expressible in a single while loop with no nested iteration — algorithmic minimalism. Same Θ(n²) behavior as insertion sort.',
+  },
+  {
+    id: 'pancake', name: 'Pancake Sort', category: 'Quadratic O(n²)',
+    fn: pancakeSort, pseudocode: pancakePC,
+    info: {
+      best: 'O(n²)', average: 'O(n²)', worst: 'O(n²)', space: 'O(1)',
+      stable: false, inPlace: true,
+      worstCompares: nSquaredOverTwo, worstLabel: 'n(n−1)/2',
+    },
+    description: 'Restricted operation set — the only allowed move is "flip a prefix of the array end-over-end." Each pass: find max in the unsorted prefix, flip it to the front, then flip the whole prefix to drop it into place. Famous in CS folklore: Bill Gates published a paper on the upper bound while an undergrad at Harvard.',
+  },
+  {
+    id: 'cycle', name: 'Cycle Sort', category: 'Quadratic O(n²)',
+    fn: cycleSort, pseudocode: cyclePC,
+    info: {
+      best: 'O(n²)', average: 'O(n²)', worst: 'O(n²)', space: 'O(1)',
+      stable: false, inPlace: true,
+      worstCompares: nSquaredOverTwo, worstLabel: 'n(n−1)/2',
+    },
+    description: 'Theoretically optimal in writes: ≤ n total memory writes — every element is placed at its final position exactly once. For each cycle, count smaller elements to find the destination, then rotate the cycle. Useful when writes are far more expensive than reads (EEPROM, write-limited flash, immutable storage).',
+  },
   // ---- Sub-quadratic ----------------------------------------------------
   {
     id: 'shell', name: 'Shell Sort', category: 'Sub-quadratic',
@@ -69,6 +110,16 @@ export const algorithms = [
       worstCompares: nSquaredOverTwo, worstLabel: 'n(n−1)/2',
     },
     description: 'Insertion sort over a decreasing sequence of "gaps" — first compare elements far apart, then closer, finally adjacent. Each gap-pass reduces inversions drastically so the final gap=1 pass has almost nothing to do. Simple to implement, no extra memory, surprisingly competitive on small inputs.',
+  },
+  {
+    id: 'comb', name: 'Comb Sort', category: 'Sub-quadratic',
+    fn: combSort, pseudocode: combPC,
+    info: {
+      best: 'O(n log n)', average: 'O(n²/2^p)', worst: 'O(n²)', space: 'O(1)',
+      stable: false, inPlace: true,
+      worstCompares: nSquaredOverTwo, worstLabel: 'n(n−1)/2',
+    },
+    description: 'Bubble sort with a shrinking gap (divide by ~1.3 each pass). Far-apart compares evict "turtle" elements that doom plain bubble sort. Once gap reaches 1 and a full pass produces no swaps, the array is sorted. Empirically much faster than bubble sort on random data despite the matching worst case.',
   },
   // ---- Log-linear O(n log n) --------------------------------------------
   {
@@ -101,6 +152,16 @@ export const algorithms = [
     },
     description: 'Builds a max-heap in place, then repeatedly swaps the root (max) to the end and sifts down. Guaranteed O(n log n), constant space — Quick Sort\'s safety net when worst-case matters. Used as the fallback when Introsort\'s recursion depth exceeds a threshold.',
   },
+  {
+    id: 'block', name: 'Block Sort', category: 'Log-linear O(n log n)',
+    fn: blockSort, pseudocode: blockPC,
+    info: {
+      best: 'O(n log n)', average: 'O(n log n)', worst: 'O(n²)', space: 'O(1)',
+      stable: true, inPlace: true,
+      worstCompares: nLogN, worstLabel: 'n·log₂(n)',
+    },
+    description: 'Stable, in-place merge sort. Full block sort (WikiSort) uses an internal buffer block + sub-block rotations to achieve true O(n log n) with O(1) extra memory — the only sort here that\'s simultaneously stable AND in-place. This visualizer ships a simplified version: recursive merge sort with shift-based in-place merging, so each merge is O(n²) (correct, just not asymptotically optimal).',
+  },
   // ---- Hybrid (real-world) ----------------------------------------------
   {
     id: 'tim', name: 'Tim Sort', category: 'Hybrid',
@@ -121,6 +182,16 @@ export const algorithms = [
       worstCompares: (n) => 2 * nLogN(n), worstLabel: '~2·n·log₂(n)',
     },
     description: 'Quicksort + heapsort + insertion sort. Runs quicksort, but if recursion depth exceeds 2·log₂(n) it bails out to heapsort to dodge quicksort\'s O(n²) worst case; for partitions of size ≤ 16 it switches to insertion sort. Guaranteed O(n log n), in-place, fast in practice — used by C++ std::sort and .NET\'s Array.Sort.',
+  },
+  {
+    id: 'pdq', name: 'Pdq Sort', category: 'Hybrid',
+    fn: pdqSort, pseudocode: pdqPC,
+    info: {
+      best: 'O(n log n)', average: 'O(n log n)', worst: 'O(n log n)', space: 'O(log n)',
+      stable: false, inPlace: true,
+      worstCompares: (n) => 2 * nLogN(n), worstLabel: '~2·n·log₂(n)',
+    },
+    description: 'Pattern-defeating quicksort. Like introsort but smarter: median-of-three pivot, insertion-sort cutoff at 24, and a heapsort fallback when depth exceeds 2·log₂(n). Production-grade variants (Rust\'s std::sort_unstable, C++ 17\'s std::sort in some libs) also detect already-sorted patterns and shuffle pathological inputs. Beats introsort on real-world data.',
   },
   // ---- Non-comparison ----------------------------------------------------
   {
@@ -143,7 +214,48 @@ export const algorithms = [
     },
     description: 'LSD radix sort: stable counting sort on the ones digit, then tens, then hundreds, etc. — d passes for d-digit numbers. Total work O(d·(n+b)) where b = base (10 here). Used in places where keys are bounded-width (integers, fixed-length strings); legendary for being fast on real data despite the unfamiliar shape. Caveat: digit buckets are internal and not drawn.',
   },
+  // ---- Parallel / network -----------------------------------------------
+  {
+    id: 'bitonic', name: 'Bitonic Sort', category: 'Parallel / network',
+    fn: bitonicSort, pseudocode: bitonicPC,
+    info: {
+      best: 'O(n log²n)', average: 'O(n log²n)', worst: 'O(n log²n)', space: 'O(log n)',
+      stable: false, inPlace: true,
+      worstCompares: nLogSquared, worstLabel: 'n·log²(n)',
+    },
+    description: 'A sorting network: a fixed lattice of compare-exchange operations whose pattern is independent of the input data. Each layer of compares is data-parallel — perfect for GPU/SIMD (used in CUDA/OpenCL sort primitives). O(n log²n) work; more compares than mergesort but extremely amenable to hardware parallelism.',
+  },
   // ---- For fun -----------------------------------------------------------
+  {
+    id: 'stooge', name: 'Stooge Sort', category: 'For fun',
+    fn: stoogeSort, pseudocode: stoogePC,
+    info: {
+      best: 'O(n^2.71)', average: 'O(n^2.71)', worst: 'O(n^2.71)', space: 'O(log n)',
+      stable: false, inPlace: true,
+      worstCompares: (n) => Math.round(Math.pow(n, 2.71)), worstLabel: 'n^2.71',
+    },
+    description: 'Compares ends and swaps if out of order, then recursively sorts first 2/3, last 2/3, first 2/3 again. The three overlapping recursive calls give a runtime of O(n^(log 3 / log 1.5)) ≈ O(n^2.71) — markedly slower than insertion sort. A canonical example of "what not to do" in algorithm design.',
+  },
+  {
+    id: 'slow', name: 'Slow Sort', category: 'For fun',
+    fn: slowSort, pseudocode: slowPC,
+    info: {
+      best: 'O(n^(log n/2))', average: 'O(n^(log n/2))', worst: 'O(n^(log n/2))', space: 'O(n)',
+      stable: false, inPlace: true,
+      worstCompares: (n) => Math.round(Math.pow(n, Math.log2(Math.max(2, n)) / 2)), worstLabel: 'n^(log₂n / 2)',
+    },
+    description: '"Multiply and surrender" — the anti-divide-and-conquer. Recursively sort both halves, place the larger of the two midpoints at the end, then recursively sort everything except that last element. Famous from a tongue-in-cheek 1986 paper. Do not run it at n > 30 unless you have time on your hands.',
+  },
+  {
+    id: 'bead', name: 'Bead Sort', category: 'For fun',
+    fn: beadSort, pseudocode: beadPC,
+    info: {
+      best: 'O(max)', average: 'O(n·max)', worst: 'O(n·max)', space: 'O(n·max)',
+      stable: false, inPlace: false,
+      worstCompares: (n) => 2 * n * n, worstLabel: '~n · max',
+    },
+    description: 'Gravity / abacus sort. Picture each bar as a stack of beads on a rod; let beads "fall" under gravity, then read the settled heights. Conceptually elegant — sorting via physics — but only works for positive integers and the count of operations scales with the values, not just n. From a 2002 paper as a theoretical curiosity, occasionally implemented in analog/optical hardware.',
+  },
   {
     id: 'bogo', name: 'Bogo Sort', category: 'For fun',
     fn: bogoSort, pseudocode: bogoPC,
