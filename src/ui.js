@@ -285,7 +285,9 @@ export function setupUI({ bars, animator, audio, onShuffle, onAlgorithmChange, o
     const next = Math.max(parseInt(speedIn.min, 10) || 1, Math.min(parseInt(speedIn.max, 10) || 50, parseInt(speedIn.value, 10) + delta));
     if (parseInt(speedIn.value, 10) === next) return;
     speedIn.value = String(next);
-    syncSpeed();
+    // Dispatch input so every listener (display + animator setSpeed) fires the
+    // same way as a slider drag.
+    speedIn.dispatchEvent(new Event('input', { bubbles: true }));
   }
   function toggleMute() {
     muteIn.checked = !muteIn.checked;
