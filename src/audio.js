@@ -9,8 +9,18 @@ export function createAudio() {
     if (!AC) return null;
     ctx = new AC();
     master = ctx.createGain();
-    master.gain.value = 0.15;
-    master.connect(ctx.destination);
+    master.gain.value = 0.2;
+    // Compressor catches the loudness buildup that happens when many tones
+    // fire within each other's attack/release window at high stepRates.
+    // Heavy ratio + fast attack acts as a near-limiter.
+    const comp = ctx.createDynamicsCompressor();
+    comp.threshold.value = -22;  // dB — start compressing well below 0dBFS
+    comp.knee.value = 6;
+    comp.ratio.value = 12;
+    comp.attack.value = 0.003;
+    comp.release.value = 0.18;
+    master.connect(comp);
+    comp.connect(ctx.destination);
     return ctx;
   }
 
