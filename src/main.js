@@ -280,6 +280,12 @@ function showRaceSummary() {
 
 function clickPlayBoth() {
   sharedAudio.resume();
+  // If the end-of-run summary is showing, treat "play" as "go again": dismiss
+  // the card and regenerate a fresh array so the very next play is meaningful
+  // (otherwise we'd be re-running the algorithm over its sorted output).
+  if (ui && !document.getElementById('summaryOverlay').hidden) {
+    newArray({ regenerateSeed: true });
+  }
   const playing = instA.animator.isPlaying || (isRace() && instB.animator.isPlaying);
   if (playing) {
     instA.animator.pause();
