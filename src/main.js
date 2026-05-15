@@ -208,13 +208,20 @@ function loadAlgorithm(id, { keepArray = false, internal = false, which = 'A' } 
 
 function loadAllForPlay() {
   // Ensure both instances have generators loaded over the current array.
-  const aLoaded = instA.animator.isLoaded;
-  if (!aLoaded) {
+  // Reset each side's finish flag as we (re)load its animator — otherwise a
+  // stale `true` from a previous race makes onInstanceFinished short-circuit
+  // and fire the summary the moment the first side reaches done, while the
+  // other is still running.
+  if (!instA.animator.isLoaded) {
+    finishedA = false;
+    finishCountersA = null;
     const id = currentAlgoA ? currentAlgoA.id : ui.getSelectedAlgorithm().id;
     loadAlgorithm(id, { keepArray: true, which: 'A', internal: true });
   }
   if (isRace()) {
     if (!instB.animator.isLoaded) {
+      finishedB = false;
+      finishCountersB = null;
       const id = currentAlgoB ? currentAlgoB.id : ui.getSelectedAlgorithmB().id;
       loadAlgorithm(id, { keepArray: true, which: 'B', internal: true });
     }
