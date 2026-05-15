@@ -8,6 +8,9 @@ import { shellSort,     pseudocode as shellPC     } from './shell.js';
 import { cocktailSort,  pseudocode as cocktailPC  } from './cocktail.js';
 import { countingSort,  pseudocode as countingPC  } from './counting.js';
 import { radixSort,     pseudocode as radixPC     } from './radix.js';
+import { timSort,       pseudocode as timPC       } from './tim.js';
+import { introSort,     pseudocode as introPC     } from './intro.js';
+import { bogoSort,      pseudocode as bogoPC      } from './bogo.js';
 
 const nSquaredOverTwo = (n) => Math.round(n * (n - 1) / 2);
 const nLogN = (n) => Math.round(n * Math.log2(Math.max(2, n)));
@@ -102,6 +105,33 @@ export const algorithms = [
       worstCompares: (n) => 2 * n * 3, worstLabel: '~2nd (d≈3 digits)',
     },
     description: 'LSD radix sort: stable counting sort on the ones digit, then tens, then hundreds, etc. — d passes for d-digit numbers. Total work O(d·(n+b)) where b = base (10 here). Used in places where keys are bounded-width (integers, fixed-length strings); legendary for being fast on real data despite the unfamiliar shape. Caveat: digit buckets are internal and not drawn.',
+  },
+  {
+    id: 'tim', name: 'Tim Sort', fn: timSort, pseudocode: timPC,
+    info: {
+      best: 'O(n)', average: 'O(n log n)', worst: 'O(n log n)', space: 'O(n)',
+      stable: true, inPlace: false,
+      worstCompares: nLogN, worstLabel: 'n·log₂(n)',
+    },
+    description: 'Hybrid of insertion sort and merge sort. Splits the array into fixed-size "runs" (16 here), insertion-sorts each, then bottom-up merges runs of doubling size. Stable, O(n) on already-sorted input, O(n log n) worst case. The default sort in Python (sorted / list.sort) and Java\'s Arrays.sort for objects — wins in practice because real data is rarely random.',
+  },
+  {
+    id: 'intro', name: 'Intro Sort', fn: introSort, pseudocode: introPC,
+    info: {
+      best: 'O(n log n)', average: 'O(n log n)', worst: 'O(n log n)', space: 'O(log n)',
+      stable: false, inPlace: true,
+      worstCompares: (n) => 2 * nLogN(n), worstLabel: '~2·n·log₂(n)',
+    },
+    description: 'Quicksort + heapsort + insertion sort. Runs quicksort, but if recursion depth exceeds 2·log₂(n) it bails out to heapsort to dodge quicksort\'s O(n²) worst case; for partitions of size ≤ 16 it switches to insertion sort. Guaranteed O(n log n), in-place, fast in practice — used by C++ std::sort and .NET\'s Array.Sort.',
+  },
+  {
+    id: 'bogo', name: 'Bogo Sort', fn: bogoSort, pseudocode: bogoPC,
+    info: {
+      best: 'O(n)', average: 'O(n · n!)', worst: 'O(∞)', space: 'O(1)',
+      stable: false, inPlace: true,
+      worstCompares: (n) => n, worstLabel: 'n (best case — pray)',
+    },
+    description: 'The joke sort. Shuffles the array, checks if sorted, repeats. Expected work O(n · n!) — for n=12 that\'s ~6 billion shuffles; for n=20 it\'s longer than the age of the universe. Run it at n ≤ 8 for entertainment; anything larger will not finish in your lifetime. Press New Array to bail.',
   },
 ];
 

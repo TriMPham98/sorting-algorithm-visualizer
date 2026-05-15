@@ -24,8 +24,22 @@ export function setupUI({ bars, animator, audio, onShuffle, onAlgorithmChange, o
   const infoInPlace = document.getElementById('infoInPlace');
   const summaryOverlay = document.getElementById('summaryOverlay');
   const sumTitle = document.getElementById('sumTitle');
+  const sumSingle = document.getElementById('sumSingle');
   const sumComps = document.getElementById('sumComps');
   const sumWrites = document.getElementById('sumWrites');
+  const sumRace = document.getElementById('sumRace');
+  const sumRaceHeadA = document.getElementById('sumRaceHeadA');
+  const sumRaceHeadB = document.getElementById('sumRaceHeadB');
+  const sumRaceCompsA = document.getElementById('sumRaceCompsA');
+  const sumRaceCompsB = document.getElementById('sumRaceCompsB');
+  const sumRaceWritesA = document.getElementById('sumRaceWritesA');
+  const sumRaceWritesB = document.getElementById('sumRaceWritesB');
+  const sumRaceTotalA = document.getElementById('sumRaceTotalA');
+  const sumRaceTotalB = document.getElementById('sumRaceTotalB');
+  const sumWorstRow = document.getElementById('sumWorstRow');
+  const sumRatioRow = document.getElementById('sumRatioRow');
+  const sumWinnerRow = document.getElementById('sumWinnerRow');
+  const sumWinner = document.getElementById('sumWinner');
   const sumWorst = document.getElementById('sumWorst');
   const sumRatio = document.getElementById('sumRatio');
   const descToggle = document.getElementById('descToggle');
@@ -155,17 +169,39 @@ export function setupUI({ bars, animator, audio, onShuffle, onAlgorithmChange, o
     shortcutsOverlay.hidden = !next;
   }
 
-  function showSummary({ algoName, n, comparisons, writes, comparisonsB, writesB, worstCompares, worstLabel }) {
+  function showSummary(opts) {
+    const { algoName, n, comparisons, writes } = opts;
     sumTitle.textContent = `${algoName} · n = ${n}`;
-    const fmt = (a, b) => b == null
-      ? a.toLocaleString()
-      : `A ${a.toLocaleString()}  ·  B ${b.toLocaleString()}`;
-    sumComps.textContent = fmt(comparisons, comparisonsB);
-    sumWrites.textContent = fmt(writes, writesB);
-    sumWorst.textContent = `≈ ${worstCompares.toLocaleString()} compares (${worstLabel})`;
-    const totalThis = comparisons + (comparisonsB ?? 0);
-    const ratio = worstCompares > 0 ? (totalThis / worstCompares) * 100 : 0;
-    sumRatio.textContent = `${ratio.toFixed(0)}%`;
+    const isRace = opts.comparisonsB != null;
+    if (isRace) {
+      const { algoNameA, algoNameB, comparisonsB, writesB, winner } = opts;
+      sumRaceHeadA.textContent = `A · ${algoNameA}`;
+      sumRaceHeadB.textContent = `B · ${algoNameB}`;
+      sumRaceCompsA.textContent = comparisons.toLocaleString();
+      sumRaceCompsB.textContent = comparisonsB.toLocaleString();
+      sumRaceWritesA.textContent = writes.toLocaleString();
+      sumRaceWritesB.textContent = writesB.toLocaleString();
+      sumRaceTotalA.textContent = (comparisons + writes).toLocaleString();
+      sumRaceTotalB.textContent = (comparisonsB + writesB).toLocaleString();
+      sumWinner.textContent = winner;
+      sumSingle.hidden = true;
+      sumRace.hidden = false;
+      sumWorstRow.hidden = true;
+      sumRatioRow.hidden = true;
+      sumWinnerRow.hidden = false;
+    } else {
+      const { worstCompares, worstLabel } = opts;
+      sumComps.textContent = comparisons.toLocaleString();
+      sumWrites.textContent = writes.toLocaleString();
+      sumWorst.textContent = `≈ ${worstCompares.toLocaleString()} compares (${worstLabel})`;
+      const ratio = worstCompares > 0 ? (comparisons / worstCompares) * 100 : 0;
+      sumRatio.textContent = `${ratio.toFixed(0)}%`;
+      sumSingle.hidden = false;
+      sumRace.hidden = true;
+      sumWorstRow.hidden = false;
+      sumRatioRow.hidden = false;
+      sumWinnerRow.hidden = true;
+    }
     summaryOverlay.hidden = false;
   }
 

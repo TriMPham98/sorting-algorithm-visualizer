@@ -251,16 +251,24 @@ function showRaceSummary() {
   const cb = finishCountersB ?? instB.animator.getCounters();
   const aOps = ca.comparisons + ca.writes;
   const bOps = cb.comparisons + cb.writes;
-  const winner = aOps < bOps ? currentAlgoA.name : (bOps < aOps ? currentAlgoB.name : 'Tie');
+  let winner;
+  if (aOps < bOps) {
+    winner = `${currentAlgoA.name} (saves ${(bOps - aOps).toLocaleString()} ops)`;
+  } else if (bOps < aOps) {
+    winner = `${currentAlgoB.name} (saves ${(aOps - bOps).toLocaleString()} ops)`;
+  } else {
+    winner = 'Tie';
+  }
   ui.showSummary({
     algoName: `${currentAlgoA.name}  vs  ${currentAlgoB.name}`,
+    algoNameA: currentAlgoA.name,
+    algoNameB: currentAlgoB.name,
     n: instA.bars.length,
     comparisons: ca.comparisons,
     writes: ca.writes,
     comparisonsB: cb.comparisons,
     writesB: cb.writes,
-    worstCompares: aOps + bOps,
-    worstLabel: `Winner: ${winner}`,
+    winner,
   });
   ui.setPlayLabel('Play');
 }

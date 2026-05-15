@@ -255,6 +255,51 @@
       #summary .sum-foot .sum-k {
         margin-right: 6px;
       }
+      .sum-race {
+        width: 100%;
+        border-collapse: collapse;
+        margin-bottom: 14px;
+        font-size: 13px;
+      }
+      .sum-race th, .sum-race td {
+        padding: 6px 10px;
+        text-align: right;
+        font-variant-numeric: tabular-nums;
+      }
+      .sum-race thead th {
+        font-size: 11px;
+        font-weight: 600;
+        color: var(--accent);
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        border-bottom: 1px solid var(--panel-border);
+        padding-bottom: 8px;
+      }
+      .sum-race tbody th {
+        font-weight: 500;
+        color: var(--muted);
+        text-align: left;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        font-size: 10.5px;
+      }
+      .sum-race tbody td {
+        color: var(--text);
+        font-weight: 600;
+      }
+      .sum-race .sum-race-total th,
+      .sum-race .sum-race-total td {
+        border-top: 1px solid var(--panel-border);
+        padding-top: 8px;
+      }
+      .sum-race .sum-race-total td { color: var(--accent); }
+      .sum-winner {
+        color: #4ad295;
+        font-weight: 600;
+      }
+      #sumRace[hidden], #sumWorstRow[hidden], #sumRatioRow[hidden], #sumWinnerRow[hidden], #sumSingle[hidden] {
+        display: none;
+      }
       #summary .sum-hint {
         margin-top: 10px;
         color: var(--muted);
@@ -384,6 +429,11 @@
       body.no-current-op .stat.current { display: none; }
       /* In race mode the pseudocode panel gets in the way; hide it. */
       body.mode-race #code { display: none; }
+      /* Algo info (Best/Average/Worst/Space/Stable/InPlace + "What is this?")
+         describes the A algorithm only, which is misleading when racing two.
+         Hide the block in race mode. */
+      body.mode-race #info { display: none; }
+      body.mode-race #descBody { display: none; }
       /* HUD A's name row mirrors HUD B's — shown only in race mode. */
       #hud .hud-name { display: none; }
       body.mode-race #hud .hud-name {
@@ -531,13 +581,28 @@
     <div id="summaryOverlay" hidden>
       <div id="summary">
         <h2 id="sumTitle">Sort complete</h2>
-        <div class="sum-grid">
+        <div class="sum-grid" id="sumSingle">
           <div class="sum-k">Comparisons</div><div class="sum-v" id="sumComps">0</div>
           <div class="sum-k">Writes</div><div class="sum-v" id="sumWrites">0</div>
         </div>
+        <table class="sum-race" id="sumRace" hidden>
+          <thead>
+            <tr>
+              <th></th>
+              <th id="sumRaceHeadA">A</th>
+              <th id="sumRaceHeadB">B</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><th>Comparisons</th><td id="sumRaceCompsA">0</td><td id="sumRaceCompsB">0</td></tr>
+            <tr><th>Writes</th><td id="sumRaceWritesA">0</td><td id="sumRaceWritesB">0</td></tr>
+            <tr class="sum-race-total"><th>Total ops</th><td id="sumRaceTotalA">0</td><td id="sumRaceTotalB">0</td></tr>
+          </tbody>
+        </table>
         <div class="sum-foot">
-          <div><span class="sum-k">Worst case</span> <span id="sumWorst">—</span></div>
-          <div><span class="sum-k">This run</span> <span id="sumRatio">—</span> of worst</div>
+          <div id="sumWorstRow"><span class="sum-k">Worst case</span> <span id="sumWorst">—</span></div>
+          <div id="sumRatioRow"><span class="sum-k">This run</span> <span id="sumRatio">—</span> of worst</div>
+          <div id="sumWinnerRow" hidden><span class="sum-k">Winner</span> <span class="sum-winner" id="sumWinner">—</span></div>
         </div>
         <div class="sum-hint">click to dismiss</div>
       </div>
