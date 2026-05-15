@@ -34,6 +34,7 @@ export function createBars(scene, { onBoundsChange } = {}) {
   let rangeHi = null;
   let pivotIdx = null;
   let heapEnd = null;
+  let maxVal = 1;
 
   function clear() {
     for (const m of meshes) {
@@ -51,7 +52,8 @@ export function createBars(scene, { onBoundsChange } = {}) {
     values = newValues.slice();
     sortedMask = new Array(values.length).fill(false);
     const n = values.length;
-    const maxVal = Math.max(...values, 1);
+    maxVal = 1;
+    for (let i = 0; i < n; i++) if (values[i] > maxVal) maxVal = values[i];
     const gap = 0.15;
     barWidth = Math.max(0.2, (TOTAL_WIDTH / n) - gap);
     for (let i = 0; i < n; i++) {
@@ -118,14 +120,8 @@ export function createBars(scene, { onBoundsChange } = {}) {
     return -TOTAL_WIDTH / 2 + step * (i + 0.5);
   }
 
-  function maxValue() {
-    let m = 1;
-    for (const v of values) if (v > m) m = v;
-    return m;
-  }
-
   function applyHeight(i) {
-    const h = (values[i] / maxValue()) * MAX_HEIGHT;
+    const h = (values[i] / maxVal) * MAX_HEIGHT;
     meshes[i].scale.y = h;
     meshes[i].position.y = h / 2;
   }
@@ -191,6 +187,8 @@ export function createBars(scene, { onBoundsChange } = {}) {
     setPivot,
     setHeapEnd,
     getValues,
+    getValue(i) { return values[i]; },
+    getMax() { return maxVal; },
     get length() { return values.length; },
   };
 }

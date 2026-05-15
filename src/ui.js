@@ -182,7 +182,9 @@ export function setupUI({ bars, animator, audio, onShuffle, onAlgorithmChange, o
     summaryOverlay.hidden = true;
   }
 
-  summaryOverlay.addEventListener('click', hideSummary);
+  summaryOverlay.addEventListener('click', (e) => {
+    if (e.target === summaryOverlay) hideSummary();
+  });
 
   function setPseudocode(lines) {
     codeList.replaceChildren();

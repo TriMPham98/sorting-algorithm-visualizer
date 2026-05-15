@@ -129,6 +129,7 @@ function newArray({ regenerateSeed = true } = {}) {
   instA.animator.stop();
   instB.animator.stop();
   ui?.hideSummary();
+  ui?.setPlayLabel('Play');
   runStartMs = 0;
   finishedA = finishedB = false;
   finishCountersA = finishCountersB = null;
@@ -313,9 +314,12 @@ document.getElementById('step').addEventListener('click', stepBoth);
 // ---------- Initial state ---------------------------------------------------
 
 const urlState = readState();
-if (urlState.seed) seed = parseInt(urlState.seed, 10) >>> 0;
+// setSize / setPreset both fire change handlers that call newArray with a
+// freshly-randomized seed, so assign the URL seed AFTER those calls so that
+// the final newArray below uses the seed from the URL (not a discarded one).
 if (urlState.size) ui.setSize(parseInt(urlState.size, 10));
 if (urlState.preset) ui.setPreset(urlState.preset);
+if (urlState.seed) seed = parseInt(urlState.seed, 10) >>> 0;
 const initialAlgoId = urlState.algo || 'insertion';
 const initialAlgo = getAlgorithm(initialAlgoId);
 ui.setAlgorithm(initialAlgo.id);
@@ -369,13 +373,14 @@ window.addEventListener('keydown', (e) => {
   }
 });
 
-// Speed slider should drive both animators
+// Speed slider should drive both animators. ui.setupUI already wires speed
+// changes into instA via the passed-in animator; we just need to mirror to B
+// so a race starts with both at the same stepRate.
 const speedIn = document.getElementById('speed');
 speedIn.addEventListener('input', () => {
-  const v = parseInt(speedIn.value, 10);
-  instA.animator.setSpeed(v);
-  instB.animator.setSpeed(v);
+  instB.animator.setSpeed(parseInt(speedIn.value, 10));
 });
+instB.animator.setSpeed(parseInt(speedIn.value, 10));
 // Mute toggle should mute the shared audio (which both instances use)
 const muteIn = document.getElementById('mute');
 muteIn.addEventListener('change', () => sharedAudio.setMuted(muteIn.checked));

@@ -194,9 +194,7 @@ export function createAnimator({ bars, audio, onStateChange, onCountersChange, o
         bars.highlight([step.i, step.j], 'compare');
         markTouched(step.i, step.j);
         counters.comparisons++;
-        const vals = bars.getValues();
-        const max = Math.max(...vals, 1);
-        audio.playTone(vals[step.i], max);
+        audio.playTone(bars.getValue(step.i), bars.getMax());
         break;
       }
       case 'swap': {
@@ -204,9 +202,7 @@ export function createAnimator({ bars, audio, onStateChange, onCountersChange, o
         bars.highlight([step.i, step.j], 'swap');
         markTouched(step.i, step.j);
         counters.writes += 2;
-        const vals = bars.getValues();
-        const max = Math.max(...vals, 1);
-        audio.playTone(vals[step.i], max);
+        audio.playTone(bars.getValue(step.i), bars.getMax());
         break;
       }
       case 'overwrite': {
@@ -214,7 +210,7 @@ export function createAnimator({ bars, audio, onStateChange, onCountersChange, o
         bars.highlight([step.i], 'swap');
         markTouched(step.i);
         counters.writes++;
-        audio.playTone(step.value, Math.max(...bars.getValues(), 1));
+        audio.playTone(step.value, bars.getMax());
         break;
       }
       case 'mark-sorted': {
