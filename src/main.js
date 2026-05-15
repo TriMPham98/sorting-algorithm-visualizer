@@ -57,7 +57,6 @@ const instB = createInstance({
 let ui;
 let currentAlgoA = null;
 let currentAlgoB = null;
-let runStartMs = 0;
 let seed = randomSeed();
 let mysteryAlgoId = null;
 let finishedA = false;
@@ -130,7 +129,6 @@ function newArray({ regenerateSeed = true } = {}) {
   instB.animator.stop();
   ui?.hideSummary();
   ui?.setPlayLabel('Play');
-  runStartMs = 0;
   finishedA = finishedB = false;
   finishCountersA = finishCountersB = null;
   if (regenerateSeed) seed = randomSeed();
@@ -203,7 +201,6 @@ function onInstanceFinished(which, counters) {
 
 function showSingleSummary() {
   if (!currentAlgoA) return;
-  const elapsed = runStartMs > 0 ? performance.now() - runStartMs : 0;
   const c = finishCountersA ?? instA.animator.getCounters();
   const isMystery = ui.getMode() === 'mystery';
   ui.showSummary({
@@ -211,7 +208,6 @@ function showSingleSummary() {
     n: instA.bars.length,
     comparisons: c.comparisons,
     writes: c.writes,
-    elapsedMs: elapsed,
     worstCompares: currentAlgoA.info.worstCompares(instA.bars.length),
     worstLabel: currentAlgoA.info.worstLabel,
   });
@@ -220,7 +216,6 @@ function showSingleSummary() {
 }
 
 function showRaceSummary() {
-  const elapsed = runStartMs > 0 ? performance.now() - runStartMs : 0;
   const ca = finishCountersA ?? instA.animator.getCounters();
   const cb = finishCountersB ?? instB.animator.getCounters();
   const aOps = ca.comparisons + ca.writes;
@@ -231,7 +226,6 @@ function showRaceSummary() {
     n: instA.bars.length,
     comparisons: ca.comparisons,
     writes: ca.writes,
-    elapsedMs: elapsed,
     worstCompares: aOps + bOps,
     worstLabel: `A: ${ca.comparisons}c / ${ca.writes}w   B: ${cb.comparisons}c / ${cb.writes}w   →  Winner: ${winner}`,
   });
@@ -251,7 +245,6 @@ function clickPlayBoth() {
     return;
   }
   loadAllForPlay();
-  if (runStartMs === 0) runStartMs = performance.now();
   instA.animator.play();
   if (isRace()) instB.animator.play();
   ui.setPlayLabel('Pause');

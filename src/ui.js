@@ -27,7 +27,6 @@ export function setupUI({ bars, animator, audio, onShuffle, onAlgorithmChange, o
   const sumTitle = document.getElementById('sumTitle');
   const sumComps = document.getElementById('sumComps');
   const sumWrites = document.getElementById('sumWrites');
-  const sumTime = document.getElementById('sumTime');
   const sumWorst = document.getElementById('sumWorst');
   const sumRatio = document.getElementById('sumRatio');
   const descToggle = document.getElementById('descToggle');
@@ -167,11 +166,10 @@ export function setupUI({ bars, animator, audio, onShuffle, onAlgorithmChange, o
     shortcutsOverlay.hidden = !next;
   }
 
-  function showSummary({ algoName, n, comparisons, writes, elapsedMs, worstCompares, worstLabel }) {
+  function showSummary({ algoName, n, comparisons, writes, worstCompares, worstLabel }) {
     sumTitle.textContent = `${algoName} · n = ${n}`;
     sumComps.textContent = comparisons.toLocaleString();
     sumWrites.textContent = writes.toLocaleString();
-    sumTime.textContent = `${(elapsedMs / 1000).toFixed(2)}s`;
     sumWorst.textContent = `≈ ${worstCompares.toLocaleString()} compares (${worstLabel})`;
     const ratio = worstCompares > 0 ? (comparisons / worstCompares) * 100 : 0;
     sumRatio.textContent = `${ratio.toFixed(0)}%`;
