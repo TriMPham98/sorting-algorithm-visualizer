@@ -1,6 +1,6 @@
 import { algorithms, getAlgorithm } from './algorithms/index.js';
 
-export function setupUI({ bars, animator, audio, onShuffle, onAlgorithmChange, onSizeChange, onModeChange, onMysteryAnswer }) {
+export function setupUI({ bars, animator, audio, onShuffle, onAlgorithmChange, onSizeChange, onModeChange }) {
   const algoSel = document.getElementById('algo');
   const sizeIn = document.getElementById('size');
   const sizeVal = document.getElementById('sizeVal');
@@ -34,14 +34,6 @@ export function setupUI({ bars, animator, audio, onShuffle, onAlgorithmChange, o
   const shortcutsOverlay = document.getElementById('shortcutsOverlay');
   const modeSel = document.getElementById('mode');
   const algoRow = document.getElementById('algoRow');
-  const codePanel = document.getElementById('code');
-  const infoPanel = document.getElementById('info');
-  const predictPanel = document.getElementById('predict');
-  const predictFb = document.getElementById('predictFb');
-  const predictScore = document.getElementById('predictScore');
-  const mysteryAnswers = document.getElementById('mysteryAnswers');
-  const mysteryGrid = document.getElementById('mysteryGrid');
-  const mysteryResult = document.getElementById('mysteryResult');
   const algoBSel = document.getElementById('algoB');
   const algoBRow = document.getElementById('algoBRow');
   const hudB = document.getElementById('hudB');
@@ -49,8 +41,6 @@ export function setupUI({ bars, animator, audio, onShuffle, onAlgorithmChange, o
   const writeCountB = document.getElementById('writeCountB');
   const hudBName = document.getElementById('hudBName');
   const hudAName = document.getElementById('hudAName');
-  let predictRight = 0;
-  let predictTotal = 0;
 
   for (const a of algorithms) {
     const opt = document.createElement('option');
@@ -183,9 +173,7 @@ export function setupUI({ bars, animator, audio, onShuffle, onAlgorithmChange, o
     summaryOverlay.hidden = true;
   }
 
-  summaryOverlay.addEventListener('click', (e) => {
-    if (e.target === summaryOverlay) hideSummary();
-  });
+  summaryOverlay.addEventListener('click', hideSummary);
 
   function setPseudocode(lines) {
     codeList.replaceChildren();
@@ -221,24 +209,11 @@ export function setupUI({ bars, animator, audio, onShuffle, onAlgorithmChange, o
   modeSel.addEventListener('change', () => applyMode(modeSel.value));
 
   function applyMode(mode) {
-    const isPredict = mode === 'predict';
-    const isMystery = mode === 'mystery';
     const isRace = mode === 'race';
     document.body.classList.toggle('mode-single', !isRace);
     document.body.classList.toggle('mode-race', isRace);
-    predictPanel.hidden = !isPredict;
-    algoRow.hidden = isMystery;
     algoBRow.hidden = !isRace;
     hudB.hidden = !isRace;
-    codePanel.style.visibility = isMystery ? 'hidden' : '';
-    infoPanel.style.display = isMystery ? 'none' : '';
-    if (isPredict) {
-      predictRight = 0; predictTotal = 0;
-      predictScore.textContent = '0 / 0';
-      predictFb.textContent = '';
-      predictFb.classList.remove('right', 'wrong');
-    }
-    mysteryAnswers.hidden = true;
     onModeChange?.(mode);
   }
   // Default mode is single-canvas.
@@ -248,59 +223,6 @@ export function setupUI({ bars, animator, audio, onShuffle, onAlgorithmChange, o
     onAlgorithmChange?.(algoBSel.value, { which: 'B' });
     setPlayLabel('Play');
   });
-
-  predictPanel.addEventListener('click', (e) => {
-    const btn = e.target.closest('button[data-pred]');
-    if (!btn) return;
-    audio.resume();
-    if (!animator.isLoaded) {
-      onAlgorithmChange(algoSel.value, { keepArray: true });
-    }
-    const guess = btn.dataset.pred;
-    const next = animator.peekNextOperational();
-    let actual;
-    if (!next) actual = 'done';
-    else actual = next.type;
-    const correct = (guess === actual);
-    predictTotal++;
-    if (correct) predictRight++;
-    predictScore.textContent = `${predictRight} / ${predictTotal}`;
-    predictFb.textContent = correct
-      ? `✓ correct — next is "${actual}"`
-      : `✗ guessed "${guess}", actual "${actual}"`;
-    predictFb.classList.remove('right', 'wrong');
-    predictFb.classList.add(correct ? 'right' : 'wrong');
-    // Now apply the peeked step
-    animator.applyPeeked();
-    if (!next) {
-      // generator finished
-      // Let main.js handle state via animator's onStateChange
-    }
-  });
-
-  function buildMysteryAnswers(correctAlgoId, allAlgos) {
-    mysteryGrid.replaceChildren();
-    mysteryResult.textContent = '';
-    mysteryResult.classList.remove('right', 'wrong');
-    for (const a of allAlgos) {
-      const btn = document.createElement('button');
-      btn.textContent = a.name;
-      btn.addEventListener('click', () => {
-        const right = a.id === correctAlgoId;
-        for (const b of mysteryGrid.querySelectorAll('button')) {
-          b.disabled = true;
-          if (b.textContent === a.name && !right) b.classList.add('wrong');
-          if (b.dataset.algoId === correctAlgoId) b.classList.add('correct');
-        }
-        mysteryResult.textContent = right ? '✓ correct!' : `✗ it was ${algorithms.find(x => x.id === correctAlgoId).name}`;
-        mysteryResult.classList.add(right ? 'right' : 'wrong');
-        onMysteryAnswer?.(a.id, correctAlgoId);
-      });
-      btn.dataset.algoId = a.id;
-      mysteryGrid.appendChild(btn);
-    }
-    mysteryAnswers.hidden = false;
-  }
 
   function setAlgorithm(id) {
     if (algoSel.value === id) return;
@@ -360,7 +282,6 @@ export function setupUI({ bars, animator, audio, onShuffle, onAlgorithmChange, o
     getMode: () => modeSel.value,
     getSelectedAlgorithmB: () => getAlgorithm(algoBSel.value),
     applyMode,
-    buildMysteryAnswers,
     updateCountersB,
     setRaceBName,
     setRaceAName,

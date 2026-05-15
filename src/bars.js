@@ -189,6 +189,11 @@ export function createBars(scene, { onBoundsChange } = {}) {
     getValues,
     getValue(i) { return values[i]; },
     getMax() { return maxVal; },
+    getBarTop(i) {
+      const m = meshes[i];
+      if (!m) return null;
+      return { x: m.position.x, y: m.position.y + m.scale.y / 2, z: m.position.z };
+    },
     get length() { return values.length; },
   };
 }
