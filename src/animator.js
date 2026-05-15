@@ -10,6 +10,7 @@ export function createAnimator({ bars, audio, onStateChange, onCountersChange, o
   let counters = { comparisons: 0, writes: 0 };
   let lastCursorLine = -1;
   let lastCursorKind = 'default';
+  let peekBuffer = null;
 
   // Map a step type to the same color "kind" used by bars.highlight.
   function kindFor(type) {
@@ -42,6 +43,7 @@ export function createAnimator({ bars, audio, onStateChange, onCountersChange, o
     stop();
     gen = generator;
     accumulator = 0;
+    peekBuffer = null;
     resetCounters();
   }
 
@@ -82,13 +84,59 @@ export function createAnimator({ bars, audio, onStateChange, onCountersChange, o
   }
 
   function pumpOneStep() {
-    const next = gen.next();
-    if (next.done) return false;
-    applyStep(next.value);
-    if (typeof next.value.line === 'number') {
-      lastCursorLine = next.value.line;
-      lastCursorKind = kindFor(next.value.type);
+    let step;
+    if (peekBuffer) {
+      step = peekBuffer;
+      peekBuffer = null;
+    } else {
+      const next = gen.next();
+      if (next.done) return false;
+      step = next.value;
     }
+    applyStep(step);
+    if (typeof step.line === 'number') {
+      lastCursorLine = step.line;
+      lastCursorKind = kindFor(step.type);
+    }
+    return true;
+  }
+
+  // Peek next step without applying it. Returns the step object,
+  // or null if the generator is exhausted.
+  function peekStep() {
+    if (!gen) return null;
+    if (!peekBuffer) {
+      const next = gen.next();
+      if (next.done) return null;
+      peekBuffer = next.value;
+    }
+    return peekBuffer;
+  }
+
+  // Silently advance past structural steps (range/pivot/heap-end)
+  // and return the next *operational* step (or null).
+  function peekNextOperational() {
+    while (true) {
+      const p = peekStep();
+      if (!p) return null;
+      if (p.type === 'range' || p.type === 'pivot' || p.type === 'heap-end') {
+        // Apply silently (no counters, no cursor flush)
+        applyStep(peekBuffer);
+        peekBuffer = null;
+        continue;
+      }
+      return p;
+    }
+  }
+
+  function applyPeeked() {
+    if (!peekBuffer) return false;
+    clearLast();
+    const beforeOps = counters.comparisons + counters.writes;
+    const beforeLine = lastCursorLine;
+    const beforeKind = lastCursorKind;
+    pumpOneStep();
+    flushIfChanged(beforeOps, beforeLine, beforeKind);
     return true;
   }
 
@@ -191,6 +239,7 @@ export function createAnimator({ bars, audio, onStateChange, onCountersChange, o
 
   return {
     load, play, pause, toggle, stop, setSpeed, tick, stepOnce,
+    peekStep, peekNextOperational, applyPeeked,
     getCounters() { return { ...counters }; },
     get isPlaying() { return playing; },
     get isLoaded() { return gen !== null; },

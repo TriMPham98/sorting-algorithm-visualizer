@@ -40,14 +40,32 @@ export function createAudio() {
     g.gain.linearRampToValueAtTime(peak, now + attack);
     g.gain.exponentialRampToValueAtTime(0.0001, now + attack + release);
 
-    osc.connect(g).connect(master);
+    let tail = g;
+    if (typeof opts.pan === 'number' && c.createStereoPanner) {
+      const panner = c.createStereoPanner();
+      panner.pan.value = Math.max(-1, Math.min(1, opts.pan));
+      g.connect(panner);
+      tail = panner;
+    }
+
+    osc.connect(g);
+    tail.connect(master);
     osc.start(now);
     osc.stop(now + attack + release + 0.02);
+  }
+
+  // Returns an audio wrapper with a fixed pan applied to every tone.
+  function panned(pan) {
+    return {
+      playTone(v, max, opts = {}) { playTone(v, max, { ...opts, pan }); },
+      resume,
+      setMuted(m) { muted = !!m; },
+    };
   }
 
   function setMuted(v) {
     muted = !!v;
   }
 
-  return { playTone, resume, setMuted };
+  return { playTone, resume, setMuted, panned };
 }
