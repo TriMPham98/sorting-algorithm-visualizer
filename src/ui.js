@@ -67,9 +67,10 @@ export function setupUI({ bars, animator, audio, onShuffle, onAlgorithmChange, o
   // Default B to a different algo than A
   if (algorithms.length > 1) algoBSel.value = algorithms[1].id;
 
+  // Display only — actual setSpeed for each instance is owned by main.js so
+  // race mode advances both animators at identical stepRate.
   function syncSpeed() {
     speedVal.textContent = speedIn.value;
-    animator.setSpeed(parseInt(speedIn.value, 10));
   }
   speedIn.addEventListener('input', syncSpeed);
   syncSpeed();

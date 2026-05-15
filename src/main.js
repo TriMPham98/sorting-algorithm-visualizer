@@ -404,12 +404,14 @@ window.addEventListener('keydown', (e) => {
   }
 });
 
-// Speed slider should drive both animators. ui.setupUI already wires speed
-// changes into instA via the passed-in animator; we just need to mirror to B
-// so a race starts with both at the same stepRate.
+// Single source of truth for speed: feed both animators the same slider value
+// in the same call so race mode stays symmetric (ui.js only updates the
+// display number — it does not touch animator speed).
 const speedIn = document.getElementById('speed');
-function applySpeedGate() {
+function applySpeed() {
   const v = parseInt(speedIn.value, 10);
+  instA.animator.setSpeed(v);
+  instB.animator.setSpeed(v);
   const rate = v <= 10 ? v / 10 : v - 9;
   // Above ~4 steps/frame the per-step displays flicker too much to read.
   const showStepDisplays = rate <= 4;
@@ -417,12 +419,8 @@ function applySpeedGate() {
   instB.labels.setEnabled(showStepDisplays);
   document.body.classList.toggle('no-current-op', !showStepDisplays);
 }
-speedIn.addEventListener('input', () => {
-  instB.animator.setSpeed(parseInt(speedIn.value, 10));
-  applySpeedGate();
-});
-instB.animator.setSpeed(parseInt(speedIn.value, 10));
-applySpeedGate();
+speedIn.addEventListener('input', applySpeed);
+applySpeed();
 // Mute toggle should mute the shared audio (which both instances use)
 const muteIn = document.getElementById('mute');
 muteIn.addEventListener('change', () => sharedAudio.setMuted(muteIn.checked));
