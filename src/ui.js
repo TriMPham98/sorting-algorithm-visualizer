@@ -9,7 +9,6 @@ export function setupUI({ bars, animator, audio, onShuffle, onAlgorithmChange, o
   const shuffleBtn = document.getElementById('shuffle');
   const playBtn = document.getElementById('play');
   const stepBtn = document.getElementById('step');
-  const resetBtn = document.getElementById('reset');
   const muteIn = document.getElementById('mute');
   const presetSel = document.getElementById('preset');
   const compCount = document.getElementById('compCount');
@@ -49,6 +48,7 @@ export function setupUI({ bars, animator, audio, onShuffle, onAlgorithmChange, o
   const compCountB = document.getElementById('compCountB');
   const writeCountB = document.getElementById('writeCountB');
   const hudBName = document.getElementById('hudBName');
+  const hudAName = document.getElementById('hudAName');
   let predictRight = 0;
   let predictTotal = 0;
 
@@ -110,11 +110,6 @@ export function setupUI({ bars, animator, audio, onShuffle, onAlgorithmChange, o
     animator.stepOnce();
   });
 
-  resetBtn.addEventListener('click', () => {
-    onShuffle();
-    setPlayLabel('Play');
-  });
-
   muteIn.addEventListener('change', () => {
     audio.setMuted(muteIn.checked);
   });
@@ -136,6 +131,10 @@ export function setupUI({ bars, animator, audio, onShuffle, onAlgorithmChange, o
 
   function setRaceBName(name) {
     hudBName.textContent = `B · ${name}`;
+  }
+
+  function setRaceAName(name) {
+    hudAName.textContent = `A · ${name}`;
   }
 
   function setAlgorithmInfo(info) {
@@ -360,5 +359,6 @@ export function setupUI({ bars, animator, audio, onShuffle, onAlgorithmChange, o
     buildMysteryAnswers,
     updateCountersB,
     setRaceBName,
+    setRaceAName,
   };
 }

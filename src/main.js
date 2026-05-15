@@ -157,6 +157,7 @@ function loadAlgorithm(id, { keepArray = false, internal = false, which = 'A' } 
       ui?.setAlgorithmInfo(algo.info);
       ui?.setAlgorithmDescription(algo.description);
     }
+    ui?.setRaceAName(isMystery ? 'Mystery' : algo.name);
   } else {
     currentAlgoB = algo;
     ui?.setRaceBName(algo.name);
@@ -282,6 +283,7 @@ ui = setupUI({
     } else if (mode === 'race') {
       currentAlgoA = ui.getSelectedAlgorithm();
       currentAlgoB = ui.getSelectedAlgorithmB();
+      ui.setRaceAName(currentAlgoA.name);
       ui.setRaceBName(currentAlgoB.name);
     } else {
       mysteryAlgoId = null;
@@ -323,6 +325,7 @@ ui.updateCountersB({ comparisons: 0, writes: 0 });
 ui.setPseudocode(initialAlgo.pseudocode);
 ui.setAlgorithmInfo(initialAlgo.info);
 ui.setAlgorithmDescription(initialAlgo.description);
+ui.setRaceAName(initialAlgo.name);
 ui.setRaceBName(currentAlgoB.name);
 newArray({ regenerateSeed: false });
 

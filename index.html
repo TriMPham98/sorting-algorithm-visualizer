@@ -132,12 +132,25 @@
         letter-spacing: 0.02em;
       }
       .desc-toggle:hover { color: #9ec8ff; }
+      /* Floats outside #panel so opening it doesn't resize the card. */
       #descBody {
-        margin: 6px 0 0;
+        position: absolute;
+        left: 100%;
+        margin-left: 8px;
+        top: 0;
+        width: 280px;
+        padding: 12px 14px;
+        background: var(--panel-bg);
+        border: 1px solid var(--panel-border);
+        border-radius: 10px;
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
         color: #c8d1e3;
         font-size: 11.5px;
         line-height: 1.55;
+        z-index: 50;
       }
+      #descBody[hidden] { display: none; }
       .shortcuts-btn {
         position: absolute;
         top: 10px;
@@ -413,17 +426,15 @@
       }
       /* In race mode the pseudocode panel gets in the way; hide it. */
       body.mode-race #code { display: none; }
-      /* HUD-A gets a small "A" badge in race mode */
-      body.mode-race #hud::before {
-        content: 'A';
-        position: absolute;
-        top: -10px; left: -10px;
-        width: 22px; height: 22px;
-        background: var(--accent);
-        color: #0a1020;
-        border-radius: 50%;
-        display: grid; place-items: center;
-        font-size: 11px; font-weight: 700;
+      /* HUD A's name row mirrors HUD B's — shown only in race mode. */
+      #hud .hud-name { display: none; }
+      body.mode-race #hud .hud-name {
+        display: block;
+        font-size: 11px;
+        color: var(--accent);
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        margin-bottom: 6px;
       }
       #code {
         position: fixed;
@@ -540,7 +551,6 @@
         <button id="shuffle">New Array</button>
         <button id="play">Play</button>
         <button id="step">Step</button>
-        <button id="reset">Reset</button>
       </div>
       <label class="mute">
         <input type="checkbox" id="mute" />
@@ -556,8 +566,8 @@
           <span class="info-k" style="margin-left:10px">In-place</span><span class="info-v" id="infoInPlace">—</span>
         </div>
         <button class="desc-toggle" id="descToggle" type="button">▾ What is this?</button>
-        <p id="descBody" hidden></p>
       </div>
+      <p id="descBody" hidden></p>
       <button class="shortcuts-btn" id="shortcutsBtn" title="Keyboard shortcuts (?)">?</button>
     </div>
     <div id="summaryOverlay" hidden>
@@ -580,6 +590,7 @@
       </div>
     </div>
     <div id="hud">
+      <div class="hud-name" id="hudAName">A</div>
       <div class="stat"><span class="label">Comparisons</span><span class="num" id="compCount">0</span></div>
       <div class="stat"><span class="label">Writes</span><span class="num" id="writeCount">0</span></div>
     </div>
