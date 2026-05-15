@@ -5,7 +5,9 @@ export function createScene(canvas) {
   scene.background = new THREE.Color(0x07090f);
   scene.fog = new THREE.Fog(0x07090f, 60, 220);
 
-  const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
+  // Initial aspect from the canvas's actual displayed size; updated on resize.
+  const initialAspect = (canvas.clientWidth || window.innerWidth) / Math.max(1, canvas.clientHeight || window.innerHeight);
+  const camera = new THREE.PerspectiveCamera(45, initialAspect, 0.1, 1000);
   let bounds = { width: 80, height: 22 };
   // First-principles fit: derive camera position from explicit screen-space
   // constraints, not from "max(distH, distV)" heuristics.
@@ -52,7 +54,21 @@ export function createScene(canvas) {
 
   const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-  renderer.setSize(window.innerWidth, window.innerHeight);
+  // Sizing is driven by the canvas's actual display size (CSS-controlled),
+  // not the window — so a 50%-height canvas in race mode renders correctly.
+  // updateStyle=false keeps CSS in control of layout.
+  function fitToCanvas() {
+    const w = canvas.clientWidth;
+    const h = canvas.clientHeight;
+    if (w <= 0 || h <= 0) return;  // canvas hidden / not laid out yet
+    if (camera.aspect !== w / h) {
+      camera.aspect = w / h;
+      camera.updateProjectionMatrix();
+    }
+    renderer.setSize(w, h, false);
+    fitView();
+  }
+  fitToCanvas();
 
   const ambient = new THREE.AmbientLight(0x9fb8d8, 0.45);
   scene.add(ambient);
@@ -76,15 +92,13 @@ export function createScene(canvas) {
   grid.position.y = -0.01;
   scene.add(grid);
 
-  function onResize() {
-    const w = window.innerWidth;
-    const h = window.innerHeight;
-    camera.aspect = w / h;
-    camera.updateProjectionMatrix();
-    renderer.setSize(w, h);
-    fitView();
-  }
-  window.addEventListener('resize', onResize);
+  // ResizeObserver catches CSS-driven size changes (mode toggle) as well as
+  // window resize. No window 'resize' listener needed.
+  const ro = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(fitToCanvas) : null;
+  ro?.observe(canvas);
+  // Fallback for environments without ResizeObserver.
+  function onWinResize() { fitToCanvas(); }
+  window.addEventListener('resize', onWinResize);
 
   let rafId = 0;
   const onTickFns = [];
@@ -103,7 +117,8 @@ export function createScene(canvas) {
     onTick(fn) { onTickFns.push(fn); },
     dispose() {
       cancelAnimationFrame(rafId);
-      window.removeEventListener('resize', onResize);
+      window.removeEventListener('resize', onWinResize);
+      ro?.disconnect();
     },
   };
 }

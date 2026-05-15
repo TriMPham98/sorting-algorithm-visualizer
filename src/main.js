@@ -190,10 +190,10 @@ function loadAllForPlay() {
 function onInstanceFinished(which, counters) {
   if (which === 'A') { finishedA = true; finishCountersA = counters; }
   else                { finishedB = true; finishCountersB = counters; }
-  // In race mode wait for both. In other modes show summary right away.
+  // The animator that just finished has already markAllSorted'd its OWN bars.
+  // We only need to wait for the other instance in race mode; in single modes,
+  // show the summary immediately.
   if (isRace()) {
-    instA.bars.markAllSorted?.();
-    instB.bars.markAllSorted?.();
     if (finishedA && finishedB) showRaceSummary();
   } else {
     showSingleSummary();
