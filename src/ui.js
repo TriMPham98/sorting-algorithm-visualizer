@@ -56,13 +56,24 @@ export function setupUI({ bars, animator, audio, onShuffle, onAlgorithmChange, o
   const hudBName = document.getElementById('hudBName');
   const hudAName = document.getElementById('hudAName');
 
+  // Build A/B selects with <optgroup>s reflecting the algorithms' categories.
+  let groupA = null, groupB = null, lastCategory = null;
   for (const a of algorithms) {
+    if (a.category !== lastCategory) {
+      groupA = document.createElement('optgroup');
+      groupA.label = a.category || '';
+      algoSel.appendChild(groupA);
+      groupB = document.createElement('optgroup');
+      groupB.label = a.category || '';
+      algoBSel.appendChild(groupB);
+      lastCategory = a.category;
+    }
     const opt = document.createElement('option');
     opt.value = a.id;
     opt.textContent = a.name;
-    algoSel.appendChild(opt);
+    groupA.appendChild(opt);
     const optB = opt.cloneNode(true);
-    algoBSel.appendChild(optB);
+    groupB.appendChild(optB);
   }
   // Default B to a different algo than A
   if (algorithms.length > 1) algoBSel.value = algorithms[1].id;
