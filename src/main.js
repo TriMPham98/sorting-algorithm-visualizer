@@ -73,11 +73,13 @@ const overlayB = document.getElementById('labelOverlayB');
 const currentOpA = document.getElementById('currentOp');
 const currentOpB = document.getElementById('currentOpB');
 
+// Pan A hard-left and B hard-right in race mode for clear stereo separation.
+// Free mode plays A only — keep it centered so it doesn't sound lopsided.
 const instA = createInstance({
   canvas: canvasA,
   overlay: overlayA,
   currentOpEl: currentOpA,
-  audio: sharedAudio.panned(-0.6),  // panned slightly left
+  audio: sharedAudio.panned(() => isRace() ? -1 : 0),
   hudUpdate: (c) => ui?.updateCounters(c),
   cursorUpdate: (line, kind) => ui?.setCursorLine(line, kind),
   onFinished: ({ counters }) => onInstanceFinished('A', counters),
@@ -87,7 +89,7 @@ const instB = createInstance({
   canvas: canvasB,
   overlay: overlayB,
   currentOpEl: currentOpB,
-  audio: sharedAudio.panned(+0.6),
+  audio: sharedAudio.panned(() => isRace() ? +1 : 0),
   hudUpdate: (c) => ui?.updateCountersB(c),
   cursorUpdate: () => {},          // no pseudocode for B
   onFinished: ({ counters }) => onInstanceFinished('B', counters),

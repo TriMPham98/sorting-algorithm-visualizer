@@ -54,10 +54,15 @@ export function createAudio() {
     osc.stop(now + attack + release + 0.02);
   }
 
-  // Returns an audio wrapper with a fixed pan applied to every tone.
+  // Returns an audio wrapper that applies a pan to every tone. `pan` may be
+  // a number (fixed) or a function returning a number (sampled each call), so
+  // callers can switch panning on/off at runtime, e.g., only in race mode.
   function panned(pan) {
     return {
-      playTone(v, max, opts = {}) { playTone(v, max, { ...opts, pan }); },
+      playTone(v, max, opts = {}) {
+        const p = typeof pan === 'function' ? pan() : pan;
+        playTone(v, max, { ...opts, pan: p });
+      },
       resume,
       setMuted(m) { muted = !!m; },
     };
