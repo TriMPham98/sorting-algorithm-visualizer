@@ -207,24 +207,17 @@ function loadAlgorithm(id, { keepArray = false, internal = false, which = 'A' } 
 }
 
 function loadAllForPlay() {
-  // Ensure both instances have generators loaded over the current array.
-  // Reset each side's finish flag as we (re)load its animator — otherwise a
-  // stale `true` from a previous race makes onInstanceFinished short-circuit
-  // and fire the summary the moment the first side reaches done, while the
-  // other is still running.
-  if (!instA.animator.isLoaded) {
-    finishedA = false;
-    finishCountersA = null;
+  // (Re)load each side, but skip a side that's already finished — its
+  // animator's gen is null only because it ran to completion, not because it
+  // needs a fresh start. Without this, pause-then-resume during a race
+  // re-sorts the faster algorithm on top of its already-sorted output.
+  if (!instA.animator.isLoaded && !finishedA) {
     const id = currentAlgoA ? currentAlgoA.id : ui.getSelectedAlgorithm().id;
     loadAlgorithm(id, { keepArray: true, which: 'A', internal: true });
   }
-  if (isRace()) {
-    if (!instB.animator.isLoaded) {
-      finishedB = false;
-      finishCountersB = null;
-      const id = currentAlgoB ? currentAlgoB.id : ui.getSelectedAlgorithmB().id;
-      loadAlgorithm(id, { keepArray: true, which: 'B', internal: true });
-    }
+  if (isRace() && !instB.animator.isLoaded && !finishedB) {
+    const id = currentAlgoB ? currentAlgoB.id : ui.getSelectedAlgorithmB().id;
+    loadAlgorithm(id, { keepArray: true, which: 'B', internal: true });
   }
 }
 
@@ -287,10 +280,10 @@ function showRaceSummary() {
 
 function clickPlayBoth() {
   sharedAudio.resume();
-  // If the end-of-run summary is showing, treat "play" as "go again": dismiss
-  // the card and regenerate a fresh array so the very next play is meaningful
-  // (otherwise we'd be re-running the algorithm over its sorted output).
-  if (ui && !document.getElementById('summaryOverlay').hidden) {
+  // If every side is already done, treat play as "go again": fresh array +
+  // start. Covers both space-while-summary-up and click-dismiss-then-play.
+  const allDone = finishedA && (!isRace() || finishedB);
+  if (allDone) {
     newArray({ regenerateSeed: true });
   }
   const playing = instA.animator.isPlaying || (isRace() && instB.animator.isPlaying);
