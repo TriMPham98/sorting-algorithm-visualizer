@@ -227,8 +227,10 @@ function showRaceSummary() {
     n: instA.bars.length,
     comparisons: ca.comparisons,
     writes: ca.writes,
+    comparisonsB: cb.comparisons,
+    writesB: cb.writes,
     worstCompares: aOps + bOps,
-    worstLabel: `A: ${ca.comparisons}c / ${ca.writes}w   B: ${cb.comparisons}c / ${cb.writes}w   →  Winner: ${winner}`,
+    worstLabel: `Winner: ${winner}`,
   });
   ui.setPlayLabel('Play');
 }

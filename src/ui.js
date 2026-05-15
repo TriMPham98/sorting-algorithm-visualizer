@@ -165,12 +165,16 @@ export function setupUI({ bars, animator, audio, onShuffle, onAlgorithmChange, o
     shortcutsOverlay.hidden = !next;
   }
 
-  function showSummary({ algoName, n, comparisons, writes, worstCompares, worstLabel }) {
+  function showSummary({ algoName, n, comparisons, writes, comparisonsB, writesB, worstCompares, worstLabel }) {
     sumTitle.textContent = `${algoName} · n = ${n}`;
-    sumComps.textContent = comparisons.toLocaleString();
-    sumWrites.textContent = writes.toLocaleString();
+    const fmt = (a, b) => b == null
+      ? a.toLocaleString()
+      : `A ${a.toLocaleString()}  ·  B ${b.toLocaleString()}`;
+    sumComps.textContent = fmt(comparisons, comparisonsB);
+    sumWrites.textContent = fmt(writes, writesB);
     sumWorst.textContent = `≈ ${worstCompares.toLocaleString()} compares (${worstLabel})`;
-    const ratio = worstCompares > 0 ? (comparisons / worstCompares) * 100 : 0;
+    const totalThis = comparisons + (comparisonsB ?? 0);
+    const ratio = worstCompares > 0 ? (totalThis / worstCompares) * 100 : 0;
     sumRatio.textContent = `${ratio.toFixed(0)}%`;
     summaryOverlay.hidden = false;
   }
