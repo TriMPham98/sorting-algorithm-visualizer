@@ -16,9 +16,10 @@ const sharedAudio = createAudio();
 // driven from the same controls.
 
 function createInstance({ canvas, overlay, currentOpEl, audio, hudUpdate, cursorUpdate, onFinished }) {
-  const { scene, camera, onTick, fitView } = createScene(canvas);
+  const { scene, camera, onTick, fitView, markDirty } = createScene(canvas);
   const bars = createBars(scene, {
     onBoundsChange: (w, h) => fitView(w, h),
+    markDirty,
   });
   const labels = createLabels({ overlay, camera, canvas, bars });
   onTick(() => labels.tick());

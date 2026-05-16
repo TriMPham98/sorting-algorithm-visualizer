@@ -22,7 +22,7 @@ const DIM_OPACITY = 0.28;
 const TOTAL_WIDTH = 80;
 const MAX_HEIGHT = 22;
 
-export function createBars(scene, { onBoundsChange } = {}) {
+export function createBars(scene, { onBoundsChange, markDirty } = {}) {
   const group = new THREE.Group();
   scene.add(group);
 
@@ -89,6 +89,7 @@ export function createBars(scene, { onBoundsChange } = {}) {
       const dim = !isInRange(i) && i !== pivotIdx;
       meshes[i].material.opacity = dim ? DIM_OPACITY : 1;
     }
+    markDirty?.();
   }
 
   function setRange(lo, hi) {
@@ -124,11 +125,13 @@ export function createBars(scene, { onBoundsChange } = {}) {
     const h = (values[i] / maxVal) * MAX_HEIGHT;
     meshes[i].scale.y = h;
     meshes[i].position.y = h / 2;
+    markDirty?.();
   }
 
   function setColor(i, color, emissiveScale) {
     meshes[i].material.color.copy(color);
     meshes[i].material.emissive.copy(color).multiplyScalar(emissiveScale);
+    markDirty?.();
   }
 
   function resetColor(i) {

@@ -5,6 +5,12 @@ export function createScene(canvas) {
   scene.background = new THREE.Color(0x07090f);
   scene.fog = new THREE.Fog(0x07090f, 60, 220);
 
+  // Render-on-demand: the camera and lights are static, so the scene only
+  // needs redrawing when something actually changes. markDirty() requests
+  // exactly one frame; the RAF loop renders only when dirty.
+  let dirty = true;
+  function markDirty() { dirty = true; }
+
   // Initial aspect from the canvas's actual displayed size; updated on resize.
   const initialAspect = (canvas.clientWidth || window.innerWidth) / Math.max(1, canvas.clientHeight || window.innerHeight);
   const camera = new THREE.PerspectiveCamera(45, initialAspect, 0.1, 1000);
@@ -49,6 +55,7 @@ export function createScene(canvas) {
 
     camera.position.set(0, Cy, Cz);
     camera.lookAt(0, Ly, 0);
+    markDirty();
   }
   fitView();
 
@@ -105,7 +112,14 @@ export function createScene(canvas) {
   function tick() {
     rafId = requestAnimationFrame(tick);
     for (const fn of onTickFns) fn();
+    // Only redraw when the scene changed, and never for a hidden canvas
+    // (instance B in single mode). Keeps idle CPU/GPU near zero. Leaving
+    // `dirty` set while hidden means the canvas renders as soon as it's
+    // laid out again (e.g. switching into race mode).
+    if (!dirty) return;
+    if (canvas.clientWidth === 0 || canvas.clientHeight === 0) return;
     renderer.render(scene, camera);
+    dirty = false;
   }
   tick();
 
@@ -114,6 +128,7 @@ export function createScene(canvas) {
     camera,
     renderer,
     fitView,
+    markDirty,
     onTick(fn) { onTickFns.push(fn); },
     dispose() {
       cancelAnimationFrame(rafId);
