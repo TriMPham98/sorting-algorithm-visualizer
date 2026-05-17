@@ -20,7 +20,9 @@ A beautiful browser-based 3D visualization of classic sorting algorithms with re
 
 ## 🚀 Live Demo
 
-> Coming soon — deploy to Vercel/Netlify and add the link here!
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/TriMPham98/sorting-algorithm-visualizer)
+
+[Live Demo](https://sorting-algorithm-visualizer.vercel.app) *(coming soon after first deploy)*
 
 ## 🛠️ Getting Started
 
