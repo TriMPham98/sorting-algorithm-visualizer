@@ -5,7 +5,10 @@
       "Bash(npm run *)",
       "Bash(curl -s http://localhost:5177/src/scene.js)",
       "Bash(curl -s http://localhost:5173/)",
-      "Bash(curl -s http://localhost:5176/)"
+      "Bash(curl -s http://localhost:5176/)",
+      "Bash(node scripts/verify-algorithms.mjs)",
+      "Bash(kill %1)",
+      "Bash(pkill -f verify-algorithms.mjs)"
     ]
   }
 }

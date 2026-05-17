@@ -21,6 +21,18 @@ import { blockSort,     pseudocode as blockPC     } from './block.js';
 import { stoogeSort,    pseudocode as stoogePC    } from './stooge.js';
 import { slowSort,      pseudocode as slowPC      } from './slow.js';
 import { beadSort,      pseudocode as beadPC      } from './bead.js';
+import { bucketSort,    pseudocode as bucketPC    } from './bucket.js';
+import { pigeonholeSort, pseudocode as pigeonholePC } from './pigeonhole.js';
+import { flashSort,     pseudocode as flashPC     } from './flashsort.js';
+import { treeSort,      pseudocode as treePC      } from './tree.js';
+import { smoothSort,    pseudocode as smoothPC    } from './smooth.js';
+import { tournamentSort, pseudocode as tournamentPC } from './tournament.js';
+import { oddEvenSort,   pseudocode as oddEvenPC   } from './oddeven.js';
+import { batcherSort,   pseudocode as batcherPC   } from './batcher.js';
+import { patienceSort,  pseudocode as patiencePC  } from './patience.js';
+import { strandSort,    pseudocode as strandPC    } from './strand.js';
+import { librarySort,   pseudocode as libraryPC   } from './library.js';
+import { sleepSort,     pseudocode as sleepPC     } from './sleep.js';
 
 const nSquaredOverTwo = (n) => Math.round(n * (n - 1) / 2);
 const nLogN = (n) => Math.round(n * Math.log2(Math.max(2, n)));
@@ -121,6 +133,26 @@ export const algorithms = [
     },
     description: 'Bubble sort with a shrinking gap (divide by ~1.3 each pass). Far-apart compares evict "turtle" elements that doom plain bubble sort. Once gap reaches 1 and a full pass produces no swaps, the array is sorted. Empirically much faster than bubble sort on random data despite the matching worst case.',
   },
+  {
+    id: 'library', name: 'Library Sort', category: 'Sub-quadratic',
+    fn: librarySort, pseudocode: libraryPC,
+    info: {
+      best: 'O(n)', average: 'O(n log n)', worst: 'O(n²)', space: 'O(n)',
+      stable: false, inPlace: false,
+      worstCompares: nLogN, worstLabel: 'n·log₂(n)',
+    },
+    description: 'Insertion sort with breathing room: the working array is kept padded with empty gaps so a new element usually only shifts a handful of neighbours before hitting a slot. Periodic rebalancing re-spreads the gaps. With high probability the gaps keep insertions short, giving O(n log n) average — a theoretical bridge between insertion sort and the n·log(n) class. Caveat: the gapped buffer is internal, so the visualizer shows the search comparisons and the final compacted write-back.',
+  },
+  {
+    id: 'strand', name: 'Strand Sort', category: 'Sub-quadratic',
+    fn: strandSort, pseudocode: strandPC,
+    info: {
+      best: 'O(n)', average: 'O(n²)', worst: 'O(n²)', space: 'O(n)',
+      stable: true, inPlace: false,
+      worstCompares: nSquaredOverTwo, worstLabel: 'n(n−1)/2',
+    },
+    description: 'Repeatedly pulls the next rising run ("strand") out of the input and merges it into a growing sorted result. O(n) on already-sorted data (one strand grabs everything), O(n²) when the input keeps alternating. Conceptually a relative of natural merge sort. The input/result lists are internal, so the viz shows extraction/merge comparisons then the final write-back.',
+  },
   // ---- Log-linear O(n log n) --------------------------------------------
   {
     id: 'merge', name: 'Merge Sort', category: 'Log-linear O(n log n)',
@@ -161,6 +193,46 @@ export const algorithms = [
       worstCompares: nLogN, worstLabel: 'n·log₂(n)',
     },
     description: 'Stable, in-place merge sort. Full block sort (WikiSort) uses an internal buffer block + sub-block rotations to achieve true O(n log n) with O(1) extra memory — the only sort here that\'s simultaneously stable AND in-place. This visualizer ships a simplified version: recursive merge sort with shift-based in-place merging, so each merge is O(n²) (correct, just not asymptotically optimal).',
+  },
+  {
+    id: 'tree', name: 'Tree Sort', category: 'Log-linear O(n log n)',
+    fn: treeSort, pseudocode: treePC,
+    info: {
+      best: 'O(n log n)', average: 'O(n log n)', worst: 'O(n²)', space: 'O(n)',
+      stable: true, inPlace: false,
+      worstCompares: nSquaredOverTwo, worstLabel: 'n(n−1)/2',
+    },
+    description: 'Insert every element into a binary search tree, then read it back with an in-order traversal. Average O(n log n), but a naive (unbalanced) BST degenerates to a linked list on already-sorted input — O(n²). Self-balancing variants (red-black / AVL) restore the guarantee. Shows the deep equivalence between sorting and the search-tree data structure.',
+  },
+  {
+    id: 'tournament', name: 'Tournament Sort', category: 'Log-linear O(n log n)',
+    fn: tournamentSort, pseudocode: tournamentPC,
+    info: {
+      best: 'O(n log n)', average: 'O(n log n)', worst: 'O(n log n)', space: 'O(n)',
+      stable: true, inPlace: false,
+      worstCompares: nLogN, worstLabel: 'n·log₂(n)',
+    },
+    description: 'Selection sort where "find the minimum" is a single-elimination tournament. Build a winner tree once; after emitting each champion, only the O(log n) matches along its path need replaying. The conceptual ancestor of heapsort, and the classic basis of external/replacement-selection merge sort for data too big for RAM.',
+  },
+  {
+    id: 'smooth', name: 'Smooth Sort', category: 'Log-linear O(n log n)',
+    fn: smoothSort, pseudocode: smoothPC,
+    info: {
+      best: 'O(n)', average: 'O(n log n)', worst: 'O(n log n)', space: 'O(1)',
+      stable: false, inPlace: true,
+      worstCompares: (n) => 2 * nLogN(n), worstLabel: '~2·n·log₂(n)',
+    },
+    description: 'Dijkstra\'s heapsort variant (EWD796a) built on a forest of Leonardo heaps instead of one binary heap. Adaptive: O(n) on already-sorted input, degrading gracefully to O(n log n) as disorder increases — the in-place, constant-space answer to "heapsort but adaptive." Famously intricate to implement correctly; this is the Hertel transliteration.',
+  },
+  {
+    id: 'patience', name: 'Patience Sort', category: 'Log-linear O(n log n)',
+    fn: patienceSort, pseudocode: patiencePC,
+    info: {
+      best: 'O(n log n)', average: 'O(n log n)', worst: 'O(n²)', space: 'O(n)',
+      stable: false, inPlace: false,
+      worstCompares: nSquaredOverTwo, worstLabel: '~n·(#piles)',
+    },
+    description: 'Modelled on the card game: deal each value onto the leftmost pile whose top is no smaller, then k-way merge the pile tops. The number of piles equals the length of the longest increasing subsequence, so the dealing phase solves LIS as a byproduct. With a heap for the merge it is O(n log n); this viz uses a linear pile scan for clarity.',
   },
   // ---- Hybrid (real-world) ----------------------------------------------
   {
@@ -214,6 +286,36 @@ export const algorithms = [
     },
     description: 'LSD radix sort: stable counting sort on the ones digit, then tens, then hundreds, etc. — d passes for d-digit numbers. Total work O(d·(n+b)) where b = base (10 here). Used in places where keys are bounded-width (integers, fixed-length strings); legendary for being fast on real data despite the unfamiliar shape. Caveat: digit buckets are internal and not drawn.',
   },
+  {
+    id: 'bucket', name: 'Bucket Sort', category: 'Non-comparison',
+    fn: bucketSort, pseudocode: bucketPC,
+    info: {
+      best: 'O(n+k)', average: 'O(n+k)', worst: 'O(n²)', space: 'O(n+k)',
+      stable: true, inPlace: false,
+      worstCompares: (n) => 2 * n, worstLabel: '~2n (scatter+gather)',
+    },
+    description: 'Scatter elements into ⌈√n⌉ value-range buckets, sort each bucket (insertion sort here), then concatenate. Linear-ish O(n+k) when the data is uniformly distributed so buckets stay small; degrades toward O(n²) if everything lands in one bucket. The distribution-sort cousin of counting/radix. Caveat: buckets are internal — you see the scatter reads and the ordered write-back.',
+  },
+  {
+    id: 'pigeonhole', name: 'Pigeonhole Sort', category: 'Non-comparison',
+    fn: pigeonholeSort, pseudocode: pigeonholePC,
+    info: {
+      best: 'O(n+k)', average: 'O(n+k)', worst: 'O(n+k)', space: 'O(n+k)',
+      stable: true, inPlace: false,
+      worstCompares: (n) => 2 * n, worstLabel: '2n (reads)',
+    },
+    description: 'One "hole" per distinct value in the range; drop each element into its hole, then walk the holes in order. Like counting sort, but it physically moves the elements rather than re-deriving them from tallies. Only practical when the value range k is close to n. Caveat: holes are internal — the viz shows the reads and the ordered write-back.',
+  },
+  {
+    id: 'flash', name: 'Flash Sort', category: 'Non-comparison',
+    fn: flashSort, pseudocode: flashPC,
+    info: {
+      best: 'O(n)', average: 'O(n)', worst: 'O(n²)', space: 'O(n)',
+      stable: false, inPlace: true,
+      worstCompares: nSquaredOverTwo, worstLabel: 'n(n−1)/2',
+    },
+    description: 'Neubert\'s distribution sort. Classify elements into ~0.45n value classes, prefix-sum the class boundaries, then permute every element into its class with a single in-place cycle pass, finishing with a short insertion sort. ~O(n) on uniformly distributed data and nearly in-place — but sensitive to distribution (skewed data pushes it toward O(n²)).',
+  },
   // ---- Parallel / network -----------------------------------------------
   {
     id: 'bitonic', name: 'Bitonic Sort', category: 'Parallel / network',
@@ -224,6 +326,26 @@ export const algorithms = [
       worstCompares: nLogSquared, worstLabel: 'n·log²(n)',
     },
     description: 'A sorting network: a fixed lattice of compare-exchange operations whose pattern is independent of the input data. Each layer of compares is data-parallel — perfect for GPU/SIMD (used in CUDA/OpenCL sort primitives). O(n log²n) work; more compares than mergesort but extremely amenable to hardware parallelism.',
+  },
+  {
+    id: 'oddeven', name: 'Odd-Even Sort', category: 'Parallel / network',
+    fn: oddEvenSort, pseudocode: oddEvenPC,
+    info: {
+      best: 'O(n)', average: 'O(n²)', worst: 'O(n²)', space: 'O(1)',
+      stable: true, inPlace: true,
+      worstCompares: nSquaredOverTwo, worstLabel: 'n(n−1)/2',
+    },
+    description: 'Brick sort: alternate "odd" passes comparing pairs (1,2)(3,4)… with "even" passes (0,1)(2,3)…, swapping any out-of-order pair, until a clean pass. Every compare-exchange in a phase is independent, so on a parallel machine a phase costs O(1) and the whole sort is O(n) depth. Serially it is just bubble sort\'s O(n²) cousin.',
+  },
+  {
+    id: 'batcher', name: 'Odd-Even Merge Sort', category: 'Parallel / network',
+    fn: batcherSort, pseudocode: batcherPC,
+    info: {
+      best: 'O(n log²n)', average: 'O(n log²n)', worst: 'O(n log²n)', space: 'O(1)',
+      stable: false, inPlace: true,
+      worstCompares: nLogSquared, worstLabel: 'n·log²(n)',
+    },
+    description: 'Batcher\'s odd–even merge sort: a data-independent sorting network, like bitonic, but using a different recursive merge. Same O(n log²n) work and O(log²n) depth, generally with fewer comparators than bitonic. The iterative form shown here handles any n, not just powers of two. A staple of GPU/FPGA and oblivious (data-independent) sorting.',
   },
   // ---- For fun -----------------------------------------------------------
   {
@@ -265,6 +387,16 @@ export const algorithms = [
       worstCompares: (n) => n, worstLabel: 'n (best case — pray)',
     },
     description: 'The joke sort. Shuffles the array, checks if sorted, repeats. Expected work O(n · n!) — for n=12 that\'s ~6 billion shuffles; for n=20 it\'s longer than the age of the universe. Run it at n ≤ 8 for entertainment; anything larger will not finish in your lifetime. Press New Array to bail.',
+  },
+  {
+    id: 'sleep', name: 'Sleep Sort', category: 'For fun',
+    fn: sleepSort, pseudocode: sleepPC,
+    info: {
+      best: 'O(n + r)', average: 'O(n + r)', worst: 'O(n + r)', space: 'O(n)',
+      stable: true, inPlace: false,
+      worstCompares: (n) => n, worstLabel: 'n·range (sim)',
+    },
+    description: 'The concurrency joke sort: spawn one thread per element that sleeps for a time proportional to its value, then prints it — smaller values wake first. Hilariously dependent on the OS scheduler and useless for close or large values. Simulated here with a deterministic virtual clock (r = value range) so it always sorts; the timers are conceptual, so the viz shows the clock scan then the wake-order write-back.',
   },
 ];
 
