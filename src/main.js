@@ -142,14 +142,146 @@ function fewUnique(n, rand, buckets = 5) {
   return a;
 }
 
+// Ascends to the centre then descends back down.
+function pipeOrgan(n) {
+  const a = new Array(n);
+  const mid = (n - 1) / 2 || 1;
+  for (let i = 0; i < n; i++) {
+    const d = Math.min(i, n - 1 - i); // 0 at the ends, max at the centre
+    a[i] = Math.round((d / mid) * (n - 1)) + 1;
+  }
+  return a;
+}
+
+// Repeating ascending ramps (default 4 teeth).
+function sawtooth(n, teeth = 4) {
+  const period = Math.max(2, Math.ceil(n / teeth));
+  const a = new Array(n);
+  for (let i = 0; i < n; i++) {
+    a[i] = Math.round(((i % period) / (period - 1)) * (n - 1)) + 1;
+  }
+  return a;
+}
+
+// Sorted, with the final tailRatio fraction shuffled.
+function sortedTailShuffled(n, rand, tailRatio = 0.1) {
+  const a = range1ToN(n);
+  const start = Math.floor(n * (1 - tailRatio));
+  for (let i = n - 1; i > start; i--) {
+    const j = start + Math.floor(rand() * (i - start + 1));
+    const t = a[i]; a[i] = a[j]; a[j] = t;
+  }
+  return a;
+}
+
+// Descending, with a handful of adjacent swaps so it isn't perfectly reversed.
+function reversedNearly(n, rand, swapRatio = 0.05) {
+  const a = range1ToN(n).reverse();
+  const swaps = Math.max(1, Math.round(n * swapRatio));
+  for (let s = 0; s < swaps; s++) {
+    const i = Math.floor(rand() * (n - 1));
+    const t = a[i]; a[i] = a[i + 1]; a[i + 1] = t;
+  }
+  return a;
+}
+
+// Every element identical (mid height so the bars stay visible).
+function allEqual(n) {
+  return new Array(n).fill(Math.ceil(n / 2));
+}
+
+// Only two distinct heights.
+function twoValues(n, rand) {
+  const lo = Math.max(1, Math.round(n * 0.25));
+  const a = new Array(n);
+  for (let i = 0; i < n; i++) a[i] = rand() < 0.5 ? lo : n;
+  return a;
+}
+
+// Values clustered around the mean (Box-Muller normal, clamped to [1, n]).
+function gaussian(n, rand) {
+  const a = new Array(n);
+  const mean = n / 2;
+  const sd = n / 8;
+  for (let i = 0; i < n; i++) {
+    const u1 = Math.max(rand(), 1e-9);
+    const u2 = rand();
+    const z = Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2);
+    a[i] = Math.min(n, Math.max(1, Math.round(mean + z * sd)));
+  }
+  return a;
+}
+
+// Sorted, with a few elements replaced by random outliers.
+function sortedOutliers(n, rand, ratio = 0.05) {
+  const a = range1ToN(n);
+  const k = Math.max(1, Math.round(n * ratio));
+  for (let s = 0; s < k; s++) {
+    const i = Math.floor(rand() * n);
+    a[i] = Math.floor(rand() * n) + 1;
+  }
+  return a;
+}
+
+// Median-of-three killer. McIlroy's adversary ("A Killer Adversary for
+// Quicksort", 1999): keys are kept "gas" (unassigned) and only solidified
+// when a comparison forces it, always assigning the just-touched element a
+// fresh largest key so the chosen pivot is pathologically extreme. We run it
+// against pdq's exact median-of-(lo, mid, hi) + Lomuto recursion so the
+// resulting permutation is verified-bad for this codebase's quicksort
+// (empirically ~4-5x random comparisons at n=512, trending O(n^2)).
+function med3Killer(n) {
+  const idx = range1ToN(n).map((x) => x - 1);
+  const key = new Array(n).fill(0); // 0 = gas (unassigned)
+  let solid = 0;
+  const cmp = (x, y) => {
+    const gx = key[x] === 0;
+    const gy = key[y] === 0;
+    if (gx && gy) { key[x] = ++solid; return 1; }
+    if (gx) return 1;
+    if (gy) return -1;
+    return key[x] - key[y];
+  };
+  const SMALL = 24; // matches pdq's insertion-sort cutoff
+  const part = (a, lo, hi) => {
+    const mid = (lo + hi) >> 1;
+    if (cmp(a[lo], a[mid]) > 0) { const t = a[lo]; a[lo] = a[mid]; a[mid] = t; }
+    if (cmp(a[lo], a[hi]) > 0) { const t = a[lo]; a[lo] = a[hi]; a[hi] = t; }
+    if (cmp(a[mid], a[hi]) > 0) { const t = a[mid]; a[mid] = a[hi]; a[hi] = t; }
+    { const t = a[mid]; a[mid] = a[hi]; a[hi] = t; }
+    const piv = a[hi];
+    let i = lo - 1;
+    for (let j = lo; j < hi; j++) {
+      if (cmp(a[j], piv) <= 0) { i++; const t = a[i]; a[i] = a[j]; a[j] = t; }
+    }
+    { const t = a[i + 1]; a[i + 1] = a[hi]; a[hi] = t; }
+    return i + 1;
+  };
+  const rec = (a, lo, hi) => {
+    while (hi - lo + 1 > SMALL) { const p = part(a, lo, hi); rec(a, lo, p - 1); lo = p + 1; }
+  };
+  rec(idx, 0, n - 1);
+  for (let k = 0; k < n; k++) if (key[idx[k]] === 0) key[idx[k]] = ++solid;
+  return key; // already 1..n, in original-position order
+}
+
 function makeArray(n, preset, seedVal) {
   const rand = mulberry32(seedVal);
   switch (preset) {
-    case 'sorted':     return range1ToN(n);
-    case 'reversed':   return range1ToN(n).reverse();
-    case 'nearly':     return nearlySorted(n, rand, 0.05);
-    case 'few-unique': return fewUnique(n, rand, 5);
-    default:           return shuffleInPlace(range1ToN(n), rand);
+    case 'sorted':       return range1ToN(n);
+    case 'reversed':     return range1ToN(n).reverse();
+    case 'nearly':       return nearlySorted(n, rand, 0.05);
+    case 'few-unique':   return fewUnique(n, rand, 5);
+    case 'pipe-organ':   return pipeOrgan(n);
+    case 'sawtooth':     return sawtooth(n, 4);
+    case 'sorted-tail':  return sortedTailShuffled(n, rand, 0.1);
+    case 'reversed-nearly': return reversedNearly(n, rand, 0.05);
+    case 'all-equal':    return allEqual(n);
+    case 'two-values':   return twoValues(n, rand);
+    case 'gaussian':     return gaussian(n, rand);
+    case 'sorted-outliers': return sortedOutliers(n, rand, 0.05);
+    case 'med3-killer':  return med3Killer(n);
+    default:             return shuffleInPlace(range1ToN(n), rand);
   }
 }
 
