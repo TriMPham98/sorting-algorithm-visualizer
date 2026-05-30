@@ -632,7 +632,7 @@
       <h2>Pseudocode</h2>
       <ol id="codeList"></ol>
     </div>
-    <div id="hint">click play to start — sound begins on first interaction · press ? for shortcuts</div>
+    <div id="hint">click play to start — sound begins on first interaction · press <b>?</b> for shortcuts &amp; visualization legend</div>
     <div id="shortcutsOverlay" hidden>
       <div id="shortcuts">
         <h2>Keyboard shortcuts</h2>
@@ -642,9 +642,19 @@
           <tr><td>N or R</td><td>new array</td></tr>
           <tr><td>M</td><td>toggle mute</td></tr>
           <tr><td>← / →</td><td>speed −/+</td></tr>
-          <tr><td>1 – 9</td><td>pick algorithm</td></tr>
+          <tr><td>1 – 9</td><td>pick first 9 algorithms</td></tr>
           <tr><td>?</td><td>this overlay</td></tr>
         </table>
+
+        <h2 style="margin:14px 0 6px;font-size:13px;color:var(--accent);letter-spacing:0.04em;">Visualization</h2>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:3px 12px;font-size:11.5px;">
+          <div><span style="color:#4a89dc">●</span> Default / idle</div>
+          <div><span style="color:#f6c244">●</span> Comparing (a[i] ? a[j])</div>
+          <div><span style="color:#e45757">●</span> Swapping or writing</div>
+          <div><span style="color:#4ad295">●</span> In final sorted position</div>
+          <div><span style="color:#c865ff">●</span> Pivot (quick/pdq/heap)</div>
+          <div style="color:#8a95a8">Faded = outside active range/heap</div>
+        </div>
         <div class="sum-hint">click anywhere to dismiss</div>
       </div>
     </div>
